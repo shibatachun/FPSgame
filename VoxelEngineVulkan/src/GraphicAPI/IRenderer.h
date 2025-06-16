@@ -1,5 +1,5 @@
 #pragma once
-#include <GLFW/glfw3.h>
+
 enum class API
 {
 	VULKAN,
@@ -9,8 +9,10 @@ enum class API
 
 class IRenderer {
 public:
+	
 	virtual ~IRenderer() = default;
-	virtual bool Init(GLFWwindow* window) = 0;
+	virtual bool Init() = 0;
 	virtual void DrawFrame() = 0;
 	virtual void Cleanup() = 0;
+
 };

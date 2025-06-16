@@ -24,9 +24,6 @@
     <ClCompile Include="src\utils\GlslangCompiler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\GraphicAPI\Vulkan\volk.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\GraphicAPI\RenderFactory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -48,9 +45,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\ScopeExit.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\GraphicAPI\Vulkan\volk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\GraphicAPI\IRenderer.h">

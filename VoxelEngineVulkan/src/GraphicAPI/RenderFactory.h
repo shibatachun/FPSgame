@@ -1,6 +1,7 @@
 #pragma once
 #include "IRenderer.h"
 #include <memory>
-
-std::unique_ptr<IRenderer> CreateRenderer(API api);
+#include "Vulkan/VulkanCommon.h"
+#include "Vulkan/VulkanRenderer.h"
+std::unique_ptr<IRenderer> CreateRenderer(API api, GLFWwindow* window);
 

@@ -2,7 +2,7 @@
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#pragma comment(lib, "glfw3.lib")
+
 
 #define NOMINMAX
 #pragma comment(lib, "vulkan-1.lib")
@@ -28,7 +28,7 @@ private: \
 namespace vulkan {
 
 
-    const char* ToString(const VkResult result)
+    inline const char* ToString(const VkResult result)
     {
         switch (result)
         {
@@ -78,7 +78,7 @@ namespace vulkan {
     }
 
 
-    void Check(const VkResult result, const char* const operation)
+    inline void Check(const VkResult result, const char* const operation)
     {
         if (result != VK_SUCCESS)
         {

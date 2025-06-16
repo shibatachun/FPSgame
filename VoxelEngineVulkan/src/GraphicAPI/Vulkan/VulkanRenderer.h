@@ -4,8 +4,8 @@
 
 
 
+#pragma once
 #include "../IRenderer.h"
-#include "volk.h"
 
 #include "VulkanClasses.h"
 
@@ -19,12 +19,13 @@ namespace vulkan
 	{
 	public:
 		VULKAN_NON_COPIABLE(VulkanRenderer)
-		bool Init(GLFWwindow* window) override;
+		VulkanRenderer(GLFWwindow* window);
+		bool Init() override;
 		void DrawFrame() override;
 		void Cleanup() override;
 
 	private:
-		GLFWwindow* _window = nullptr;
+		GLFWwindow* _window;
 		std::unique_ptr<class vulkan::Instance> _instance;
 		VkSurfaceKHR _surface = VK_NULL_HANDLE;
 		VkDevice _device = VK_NULL_HANDLE;

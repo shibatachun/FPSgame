@@ -108,10 +108,12 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)dep\Vulkan\Include;$(SolutionDir)dep;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)dep\Vulkan\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -132,7 +134,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\GraphicAPI\RenderFactory.cpp" />
-    <ClCompile Include="src\GraphicAPI\Vulkan\volk.c" />
     <ClCompile Include="src\GraphicAPI\Vulkan\VulkanRenderer.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\utils\GlslangCompiler.cpp" />
@@ -142,7 +143,6 @@
   <ItemGroup>
     <ClInclude Include="src\GraphicAPI\RenderFactory.h" />
     <ClInclude Include="src\GraphicAPI\IRenderer.h" />
-    <ClInclude Include="src\GraphicAPI\Vulkan\volk.h" />
     <ClInclude Include="src\GraphicAPI\Vulkan\VulkanCommon.h" />
     <ClInclude Include="src\GraphicAPI\Vulkan\VulkanRenderer.h" />
     <ClInclude Include="src\utils\GlfwHelper.h" />
