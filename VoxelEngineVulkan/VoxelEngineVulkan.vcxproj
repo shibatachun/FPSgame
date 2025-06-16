@@ -133,19 +133,23 @@
   <ItemGroup>
     <ClCompile Include="src\GraphicAPI\RenderFactory.cpp" />
     <ClCompile Include="src\GraphicAPI\Vulkan\volk.c" />
+    <ClCompile Include="src\GraphicAPI\Vulkan\VulkanRenderer.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\utils\GlslangCompiler.cpp" />
     <ClCompile Include="src\utils\minilog.cpp" />
+    <ClCompile Include="src\GraphicAPI\Vulkan\VulkanClasses.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\GraphicAPI\RenderFactory.h" />
     <ClInclude Include="src\GraphicAPI\IRenderer.h" />
     <ClInclude Include="src\GraphicAPI\Vulkan\volk.h" />
+    <ClInclude Include="src\GraphicAPI\Vulkan\VulkanCommon.h" />
     <ClInclude Include="src\GraphicAPI\Vulkan\VulkanRenderer.h" />
     <ClInclude Include="src\utils\GlfwHelper.h" />
     <ClInclude Include="src\utils\GlslangCompiler.h" />
     <ClInclude Include="src\utils\minilog.h" />
     <ClInclude Include="src\utils\ScopeExit.h" />
+    <ClInclude Include="src\GraphicAPI\Vulkan\VulkanClasses.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
