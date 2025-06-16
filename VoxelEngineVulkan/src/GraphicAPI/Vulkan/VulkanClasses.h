@@ -8,6 +8,7 @@ namespace vulkan
 		VULKAN_NON_COPIABLE(Instance);
 		Instance(GLFWwindow* window);
 		~Instance();
+		GLFWwindow* getWindow() const;
 
 	private:
 		GLFWwindow* _window;

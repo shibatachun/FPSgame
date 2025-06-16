@@ -56,6 +56,11 @@ vulkan::Instance::~Instance()
 	}
 }
 
+GLFWwindow* vulkan::Instance::getWindow() const
+{
+	return _window;
+}
+
 void vulkan::Instance::CheckVulkanMinimumVersion(const uint32_t minVersion)
 {
 	uint32_t version;
@@ -96,8 +101,14 @@ void vulkan::Instance::CheckValidationLayerSupport(const std::vector<const char*
 
 vulkan::Surface::Surface(const Instance& instance) : instance_(instance)
 {
+	instance_.getWindow();
+	Check(glfwCreateWindowSurface(instance_.Handle(), instance_.getWindow(), nullptr, &surface_), "create window surface");
 }
 
 vulkan::Surface::~Surface()
 {
+	if (surface_ != nullptr)
+	{
+		vkDestroySurfaceKHR(instance_.Handle(), surface_, nullptr);
+	}
 }

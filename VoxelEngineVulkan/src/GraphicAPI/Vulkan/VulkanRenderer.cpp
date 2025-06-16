@@ -4,6 +4,7 @@ bool vulkan::VulkanRenderer::Init()
 {
 	
 	_instance.reset(new vulkan::Instance(_window));
+	_surface.reset(new vulkan::Surface(*_instance));
 	return true;
 
 }

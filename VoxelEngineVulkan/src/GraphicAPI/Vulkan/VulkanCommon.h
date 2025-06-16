@@ -89,5 +89,9 @@ namespace vulkan {
                 " (" + ToString(result) + ")"
             );
         }
+        else
+        {
+            std::cout << "Success: do " << operation << " success!" << std::endl;
+        }
     }
 }

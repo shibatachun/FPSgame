@@ -27,7 +27,7 @@ namespace vulkan
 	private:
 		GLFWwindow* _window;
 		std::unique_ptr<class vulkan::Instance> _instance;
-		VkSurfaceKHR _surface = VK_NULL_HANDLE;
+		std::unique_ptr<class vulkan::Surface> _surface;
 		VkDevice _device = VK_NULL_HANDLE;
 		VkQueue _graphicsQueue = VK_NULL_HANDLE;
 		VkQueue _presentQueue = VK_NULL_HANDLE;
