@@ -121,6 +121,12 @@ namespace vulkan
 		VULKAN_NON_COPIABLE(Device);
 		Device(VkPhysicalDevice device,const Surface&, const std::vector<const char*>& requiredExtension, const VkPhysicalDeviceFeatures& deviceFeatures, const void* nextDeviceFeatures);
 		~Device();
+
+		uint32_t GraphicsFamilyIndex() const { return graphicsFamilyIndex_; }
+		uint32_t PresentFamilyIndex() const { return presentFamilyIndex_; }
+		VkQueue GraphicsQueue() const { return graphicsQueue_; }
+		VkQueue PresentQueue() const { return presentQueue_; }
+		void WaitIdle() const;
 	private:
 		const VkPhysicalDevice _physicalDevice;
 		const Surface& _surface;
