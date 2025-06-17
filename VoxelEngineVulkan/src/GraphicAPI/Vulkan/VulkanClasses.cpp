@@ -1,7 +1,5 @@
 #include "VulkanClasses.h"
 
-
-
 vulkan::Instance::Instance(GLFWwindow* window) : _window(window)
 {
 	
@@ -60,6 +58,24 @@ vulkan::Instance::~Instance()
 GLFWwindow* vulkan::Instance::getWindow() const
 {
 	return _window;
+}
+
+void vulkan::Instance::GetVulkanExtensions()
+{
+
+}
+
+void vulkan::Instance::GetVulkanLayers()
+{
+}
+
+void vulkan::Instance::GetVulkanPhysicalDevices()
+{
+	uint32_t deviceCount = 0;
+	vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
+	deviceCount == 0 ? throw std::runtime_error("failed to find GPUs with Vulkan support!")  : physicalDevices_.resize(deviceCount);
+	vkEnumeratePhysicalDevices(instance_, &deviceCount, physicalDevices_.data());
+
 }
 
 void vulkan::Instance::CheckVulkanMinimumVersion(const uint32_t minVersion)
@@ -121,7 +137,6 @@ vulkan::Surface::~Surface()
 		vkDestroySurfaceKHR(instance_.Handle(), surface_, nullptr);
 	}
 }
-
 
 namespace
 {
@@ -304,5 +319,66 @@ vulkan::DebugUtilsMessenger::~DebugUtilsMessenger()
 	{
 		DestroyDebugUtilsMessengerEXT(instance_.Handle(), messenger_, nullptr);
 		messenger_ = nullptr;
+	}
+}
+
+vulkan::DebugUtils::DebugUtils(VkInstance instance) :
+	vkSetDebugUtilsObjectNameEXT_(reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT")))
+{
+#ifndef NDEBUG
+	if (vkSetDebugUtilsObjectNameEXT_ == nullptr)
+	{
+		throw (std::runtime_error("failed to get address of 'vkSetDebugUtilsObjectNameEXT'"));
+	}
+#endif
+}
+
+vulkan::Device::Device(
+	VkPhysicalDevice device, 
+	const Surface& surface, 
+	const std::vector<const char*>& requiredExtension, 
+	const VkPhysicalDeviceFeatures& deviceFeatures, 
+	const void* nextDeviceFeatures):
+	_physicalDevice(device),
+	_surface(surface),
+	_debugUtils(surface.getInstance().Handle())
+{
+	CheckRequiredExtensions(_physicalDevice, requiredExtension);
+
+}
+
+vulkan::Device::~Device()
+{
+}
+
+void vulkan::Device::CheckRequiredExtensions(VkPhysicalDevice physicalDevice, const std::vector<const char*>& requiredExtensions) 
+{
+	uint32_t extensionsCount = 0;
+	vkEnumerateDeviceExtensionProperties(_physicalDevice, static_cast<const char*>(nullptr), &extensionsCount, nullptr);
+	if (extensionsCount)
+	{
+		availableExtensions_.resize(extensionsCount);
+	}
+	vkEnumerateDeviceExtensionProperties(_physicalDevice, static_cast<const char*>(nullptr), &extensionsCount, availableExtensions_.data());
+	std::set<std::string> required(requiredExtensions.begin(), requiredExtensions.end());
+
+	for (const auto& extension : availableExtensions_)
+	{
+		required.erase(extension.extensionName);
+	}
+	if (!required.empty())
+	{
+		bool first = true;
+		std::string extensions;
+		for (const auto& extension : required)
+		{
+			if (!first)
+			{
+				extensions += ", ";
+			}
+			extensions += extension;
+			first = false;
+		}
+		throw (std::runtime_error("missing required extensions: " + extensions));
 	}
 }

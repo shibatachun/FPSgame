@@ -1,15 +1,6 @@
 #pragma once
-
-
-
-
-
-#pragma once
 #include "../IRenderer.h"
-
 #include "VulkanClasses.h"
-
-
 
 namespace vulkan
 {
@@ -29,7 +20,7 @@ namespace vulkan
 		std::unique_ptr<class vulkan::Instance> _instance;
 		std::unique_ptr<class vulkan::Surface> _surface;
 		std::unique_ptr<class vulkan::DebugUtilsMessenger> _debugMessenger;
-		VkDevice _device = VK_NULL_HANDLE;
+		std::unique_ptr<class vulkan::Device> _devices;
 		VkQueue _graphicsQueue = VK_NULL_HANDLE;
 		VkQueue _presentQueue = VK_NULL_HANDLE;
 		VkSwapchainKHR _swapchain = VK_NULL_HANDLE;
@@ -37,7 +28,7 @@ namespace vulkan
 		VkRenderPass _renderPass = VK_NULL_HANDLE;
 		VkPipeline _graphicsPipline = VK_NULL_HANDLE;
 	private:
-		
+		void SetPhysicalDevices();
 
 
 	};
