@@ -5,6 +5,7 @@ bool vulkan::VulkanRenderer::Init()
 	
 	_instance.reset(new vulkan::Instance(_window));
 	_surface.reset(new vulkan::Surface(*_instance));
+	_debugMessenger.reset(new vulkan::DebugUtilsMessenger(*_instance, VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT));
 	return true;
 
 }

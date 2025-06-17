@@ -28,6 +28,7 @@ namespace vulkan
 		GLFWwindow* _window;
 		std::unique_ptr<class vulkan::Instance> _instance;
 		std::unique_ptr<class vulkan::Surface> _surface;
+		std::unique_ptr<class vulkan::DebugUtilsMessenger> _debugMessenger;
 		VkDevice _device = VK_NULL_HANDLE;
 		VkQueue _graphicsQueue = VK_NULL_HANDLE;
 		VkQueue _presentQueue = VK_NULL_HANDLE;
