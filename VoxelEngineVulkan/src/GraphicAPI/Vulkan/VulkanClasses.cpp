@@ -125,6 +125,7 @@ void vulkan::Instance::CheckValidationLayerSupport(const std::vector<const char*
 	}
 }
 
+
 vulkan::Surface::Surface(const Instance& instance) : instance_(instance)
 {
 	instance_.getWindow();
@@ -138,6 +139,7 @@ vulkan::Surface::~Surface()
 		vkDestroySurfaceKHR(instance_.Handle(), surface_, nullptr);
 	}
 }
+
 
 namespace
 {
@@ -430,7 +432,7 @@ vulkan::Device::Device(
 	Check(vkCreateDevice(_physicalDevice, &createInfo, nullptr, &device_), "create logical device");
 
 	_debugUtils.SetDevice(device_);
-	vkGetDeviceQueue(device_, graphicsFamilyIndex_, 0, &graphicsQueue_);
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         (device_, graphicsFamilyIndex_, 0, &graphicsQueue_);
 	vkGetDeviceQueue(device_, presentFamilyIndex_, 0, &presentQueue_);
 
 
@@ -479,4 +481,160 @@ void vulkan::Device::CheckRequiredExtensions(VkPhysicalDevice physicalDevice, co
 		}
 		throw (std::runtime_error("missing required extensions: " + extensions));
 	}
+}
+
+
+
+vulkan::SwapChain::SwapChain(const Device& device, VkPresentModeKHR presentationMode) : _physicalDevice(device.PhysicalDevice()), _device(device)
+{
+	const auto details = QuerySwapChainSupport(_physicalDevice, _device.VulkanSurface().Handle());
+	if (details.Formats.empty() || details.PresentModes.empty())
+	{
+		throw std::runtime_error("empty swap chain support");
+	}
+
+	const auto& surface = _device.VulkanSurface();
+	const auto& window = surface.getInstance().getWindow();
+
+	const auto surfaceFormat = ChooseSwapSurfaceFormat(details.Formats);
+	const auto actualPresentMode = ChooseSwapPresentMode(details.PresentModes, presentationMode);
+	const auto extent = ChooseSwapExtent(window, details.Capabilities);
+	const auto imageCount = ChooseImageCount(details.Capabilities);
+
+	VkSwapchainCreateInfoKHR createInfo = {
+	.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+	.surface = surface.Handle(),
+	.minImageCount = imageCount,
+	.imageFormat = surfaceFormat.format,
+	.imageColorSpace = surfaceFormat.colorSpace,
+	.imageExtent = extent,
+	.imageArrayLayers = 1,
+	.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+	.preTransform = details.Capabilities.currentTransform,
+	.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+	.presentMode = actualPresentMode,
+	.clipped = VK_TRUE,
+	.oldSwapchain = nullptr};
+
+	//如果渲染和呈现用的是同一个队列族，用 独占（EXCLUSIVE） 模式，性能最好。
+	//如果它们在不同的队列族，就用 并发（CONCURRENT） 模式，并把两条队列族索引都告诉 Vulkan，让它自动帮你管理图像的访问与同步。
+	if (_device.GraphicsFamilyIndex() != _device.PresentFamilyIndex())
+	{
+		uint32_t queueFamilyIndices[] = { _device.GraphicsFamilyIndex(), device.PresentFamilyIndex() };
+		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+		createInfo.queueFamilyIndexCount = 2;
+		createInfo.pQueueFamilyIndices = queueFamilyIndices;
+	}
+	else
+	{
+		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		createInfo.queueFamilyIndexCount = 0;
+		createInfo.pQueueFamilyIndices = nullptr;
+	}
+	Check(vkCreateSwapchainKHR(_device.Handle(), &createInfo, nullptr, &_swapChain), "create swap chain!");
+	
+
+}
+
+vulkan::SwapChain::~SwapChain()
+{
+	if (_swapChain != nullptr)
+	{
+		vkDestroySwapchainKHR(_device.Handle(), _swapChain, nullptr);
+		_swapChain = nullptr;
+	}
+}
+
+vulkan::SwapChain::SupportDetails vulkan::SwapChain::QuerySwapChainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+{
+	SupportDetails details;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &details.Capabilities);
+	uint32_t surfaceFormatCount;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, nullptr);
+	if (surfaceFormatCount)
+	{
+		details.Formats.resize(surfaceFormatCount);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, details.Formats.data());
+	}
+	uint32_t surfacePresentModesCount;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &surfacePresentModesCount, nullptr);
+	if (surfacePresentModesCount)
+	{
+		details.PresentModes.resize(surfacePresentModesCount);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &surfacePresentModesCount, details.PresentModes.data());
+	}
+	
+	return details;
+}
+
+VkSurfaceFormatKHR vulkan::SwapChain::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats)
+{
+	if (formats.size() == 1 && formats[0].format == VK_FORMAT_UNDEFINED)
+	{
+		return { VK_FORMAT_B8G8R8A8_UNORM,VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+	}
+
+	for (const auto& format : formats)
+	{
+		if (format.format == VK_FORMAT_B8G8R8A8_UNORM && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+		{
+			return format;
+		}
+	}
+	throw std::runtime_error("found no suitable surface format");
+}
+
+VkPresentModeKHR vulkan::SwapChain::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, VkPresentModeKHR presentMode)
+{
+	switch (presentMode)
+	{
+	case VK_PRESENT_MODE_IMMEDIATE_KHR:
+		break;
+	case VK_PRESENT_MODE_MAILBOX_KHR:
+		break;
+	case VK_PRESENT_MODE_FIFO_KHR:
+		break;
+	case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
+		if (std::find(presentModes.begin(), presentModes.end(), presentMode) != presentModes.end())
+		{
+			return presentMode;
+		}
+		break;
+	case VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR:
+		break;
+	case VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR:
+		break;
+	case VK_PRESENT_MODE_FIFO_LATEST_READY_EXT:
+		break;
+	case VK_PRESENT_MODE_MAX_ENUM_KHR:
+		break;
+	default:
+		throw std::out_of_range("unknow present mode");
+	}
+	return VK_PRESENT_MODE_FIFO_KHR;
+}
+
+VkExtent2D vulkan::SwapChain::ChooseSwapExtent(GLFWwindow* window, const VkSurfaceCapabilitiesKHR& capabilities)
+{
+	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+	{
+		return capabilities.currentExtent;
+	}
+	int width, height;
+	glfwGetFramebufferSize(window, &width, &height);
+	VkExtent2D actualExtent = VkExtent2D{ static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
+	actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
+	actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
+
+	return actualExtent;
+}
+
+uint32_t vulkan::SwapChain::ChooseImageCount(const VkSurfaceCapabilitiesKHR& capabilities)
+{
+	uint32_t imageCount = std::max(2u, capabilities.minImageCount);
+	if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
+	{
+		imageCount = capabilities.maxImageCount;
+	}
+	return imageCount;
 }

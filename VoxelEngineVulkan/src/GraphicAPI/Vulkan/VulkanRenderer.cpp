@@ -7,6 +7,7 @@ bool vulkan::VulkanRenderer::Init()
 	_surface.reset(new vulkan::Surface(*_instance));
 	_debugMessenger.reset(new vulkan::DebugUtilsMessenger(*_instance, VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT));
 	SetPhysicalDevices();
+	
 	return true;
 
 }
@@ -53,11 +54,32 @@ void vulkan::VulkanRenderer::SetPhysicalDevices()
 	vkGetPhysicalDeviceProperties(_physicalDevice, &props);
 	std::cout << "Using physical device : " << props.deviceName << std::endl;
 	_devices.reset(new vulkan::Device(_physicalDevice, *_surface, requeredExtensions, deviceFeatures, nullptr));
+	SetSwapChain();
 
 
 }
 
-vulkan::VulkanRenderer::VulkanRenderer(GLFWwindow* window) :_window(window)
+void vulkan::VulkanRenderer::SetSwapChain()
+{
+	while (isMinimized())
+	{
+		glfwWaitEvents();
+	}
+
+	_swaphcin.reset(new vulkan::SwapChain(*_devices, _presentMode));
+
+
+}
+
+bool vulkan::VulkanRenderer::isMinimized() const
+{
+	int width, height;
+	glfwGetFramebufferSize(_window, &width, &height);
+
+	return width==0 && height==0;
+}
+
+vulkan::VulkanRenderer::VulkanRenderer(GLFWwindow* window, VkPresentModeKHR presentmode) :_window(window), _presentMode(presentmode)
 {
 	if (!Init())
 	{

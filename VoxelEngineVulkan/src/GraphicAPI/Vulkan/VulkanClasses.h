@@ -124,6 +124,8 @@ namespace vulkan
 
 		uint32_t GraphicsFamilyIndex() const { return graphicsFamilyIndex_; }
 		uint32_t PresentFamilyIndex() const { return presentFamilyIndex_; }
+		VkPhysicalDevice PhysicalDevice() const { return _physicalDevice; }
+		const Surface& VulkanSurface() const { return _surface; }
 		VkQueue GraphicsQueue() const { return graphicsQueue_; }
 		VkQueue PresentQueue() const { return presentQueue_; }
 		void WaitIdle() const;
@@ -146,6 +148,40 @@ namespace vulkan
 
 	};
 
+	class SwapChain final
+	{
+	public:
+		VULKAN_NON_COPIABLE(SwapChain)
+		SwapChain(const Device& device, VkPresentModeKHR presentationMode);
+		~SwapChain();
+	private:
+		struct SupportDetails
+		{
+			VkSurfaceCapabilitiesKHR Capabilities{};
+			std::vector<VkSurfaceFormatKHR> Formats;
+			std::vector<VkPresentModeKHR> PresentModes;
+		};
+
+		static SupportDetails QuerySwapChainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+		static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats);
+		static VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, VkPresentModeKHR presentMode);
+		static VkExtent2D ChooseSwapExtent(GLFWwindow* window, const VkSurfaceCapabilitiesKHR& capabilities);
+		static uint32_t ChooseImageCount(const VkSurfaceCapabilitiesKHR& capabilities);
+
+		const VkPhysicalDevice _physicalDevice;
+		const class Device& _device;
+
+		VULKAN_HANDLE(VkSwapchainKHR, _swapChain)
+
+		uint32_t _minImageCount;
+		VkPresentModeKHR _presentMode;
+		VkFormat _format;
+		VkExtent2D _extent{};
+		std::vector<VkImage> _images;
+		//std::vector<std::unique_ptr<ImageView>> imageViews_;
+
+
+	};
 	
 }
 

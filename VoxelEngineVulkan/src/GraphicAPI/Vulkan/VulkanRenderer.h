@@ -10,25 +10,27 @@ namespace vulkan
 	{
 	public:
 		VULKAN_NON_COPIABLE(VulkanRenderer)
-		VulkanRenderer(GLFWwindow* window);
+		VulkanRenderer(GLFWwindow* window, VkPresentModeKHR presentMode);
 		bool Init() override;
 		void DrawFrame() override;
 		void Cleanup() override;
 
 	private:
+		const VkPresentModeKHR _presentMode;
 		GLFWwindow* _window;
 		std::unique_ptr<class vulkan::Instance> _instance;
 		std::unique_ptr<class vulkan::Surface> _surface;
 		std::unique_ptr<class vulkan::DebugUtilsMessenger> _debugMessenger;
 		std::unique_ptr<class vulkan::Device> _devices;
-		VkQueue _graphicsQueue = VK_NULL_HANDLE;
-		VkQueue _presentQueue = VK_NULL_HANDLE;
-		VkSwapchainKHR _swapchain = VK_NULL_HANDLE;
+		std::unique_ptr<class vulkan::SwapChain> _swaphcin;
+	
 		VkImageView _imageView = VK_NULL_HANDLE;
 		VkRenderPass _renderPass = VK_NULL_HANDLE;
 		VkPipeline _graphicsPipline = VK_NULL_HANDLE;
 	private:
 		void SetPhysicalDevices();
+		void SetSwapChain();
+		bool isMinimized() const;
 
 
 	};

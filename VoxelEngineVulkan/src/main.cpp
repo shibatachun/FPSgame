@@ -7,7 +7,7 @@ int main() {
 	uint32_t height = 800;
 	GLFWwindow* window = initWindow("GLFW example", width, height);
 	API api = API::VULKAN;
-	auto renderer = CreateRenderer(api, window);
+	auto renderer = CreateRenderer(api, window, VK_PRESENT_MODE_FIFO_RELAXED_KHR);
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
