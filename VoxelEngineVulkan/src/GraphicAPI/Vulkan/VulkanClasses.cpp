@@ -578,6 +578,14 @@ vulkan::SwapChain::SwapChain(const Device& device, VkPresentModeKHR presentation
 
 vulkan::SwapChain::~SwapChain()
 {
+	for (size_t i = 0; i < _imageViews.size(); i++)
+	{
+		if (_imageViews[i])
+		{
+			vkDestroyImageView(_device.Handle(), _imageViews[i], nullptr);
+			_imageViews[i] = nullptr;
+		}
+	}
 	if (_swapChain != nullptr)
 	{
 		vkDestroySwapchainKHR(_device.Handle(), _swapChain, nullptr);
