@@ -25,6 +25,7 @@ private: \
 #include <iostream>
 #include <stdexcept>
 #include <set>
+#include <string>
 
 namespace vulkan {
 

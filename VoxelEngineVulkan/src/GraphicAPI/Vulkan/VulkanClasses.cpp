@@ -532,6 +532,46 @@ vulkan::SwapChain::SwapChain(const Device& device, VkPresentModeKHR presentation
 		createInfo.pQueueFamilyIndices = nullptr;
 	}
 	Check(vkCreateSwapchainKHR(_device.Handle(), &createInfo, nullptr, &_swapChain), "create swap chain!");
+
+	uint32_t vkimageCount;
+	vkGetSwapchainImagesKHR(_device.Handle(), _swapChain, &vkimageCount, nullptr);
+	if (vkimageCount)
+	{
+		_images.resize(vkimageCount);
+		vkGetSwapchainImagesKHR(_device.Handle(), _swapChain, &vkimageCount, _images.data());
+	}
+	else
+	{
+		throw std::runtime_error("unable find vk image");
+	}
+	_imageViews.resize(_images.size());
+	for (size_t i = 0; i < _imageViews.size(); i ++ )
+	{
+		VkImageViewCreateInfo createInfo{ };
+		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+		createInfo.image = _images[i],
+		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D,
+		createInfo.format = surfaceFormat.format,
+		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY,
+		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY,
+		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY,
+		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		createInfo.subresourceRange.baseMipLevel = 0;
+		createInfo.subresourceRange.levelCount = 1;
+		createInfo.subresourceRange.baseArrayLayer = 0;
+		createInfo.subresourceRange.layerCount = 1;
+		Check(vkCreateImageView(_device.Handle(), &createInfo, nullptr, &_imageViews[i]), "Create image view");
+	}
+
+	const auto& debugUtils = _device.DebugUtils();
+
+	for (size_t i = 0; i != _images.size(); i++)
+	{
+		debugUtils.SetObjectName(_images[i], ("Swapchain Image #" + std::to_string(i)).c_str());
+		debugUtils.SetObjectName(_imageViews[i], ("Swapchain ImageView #" + std::to_string(i)).c_str());
+	}
+
 	
 
 }

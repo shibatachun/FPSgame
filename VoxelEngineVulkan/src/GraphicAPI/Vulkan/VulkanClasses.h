@@ -128,6 +128,7 @@ namespace vulkan
 		const Surface& VulkanSurface() const { return _surface; }
 		VkQueue GraphicsQueue() const { return graphicsQueue_; }
 		VkQueue PresentQueue() const { return presentQueue_; }
+		const DebugUtils& DebugUtils() const { return _debugUtils; }
 		void WaitIdle() const;
 	private:
 		const VkPhysicalDevice _physicalDevice;
@@ -178,10 +179,10 @@ namespace vulkan
 		VkFormat _format;
 		VkExtent2D _extent{};
 		std::vector<VkImage> _images;
-		//std::vector<std::unique_ptr<ImageView>> imageViews_;
-
+		std::vector<VkImageView> _imageViews;
 
 	};
+	
 	
 }
 
