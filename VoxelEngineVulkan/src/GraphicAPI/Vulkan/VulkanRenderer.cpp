@@ -14,6 +14,7 @@ bool vulkan::VulkanRenderer::Init()
 
 void vulkan::VulkanRenderer::DrawFrame()
 {
+	std::cout << "yo, wasup" << std::endl;
 }
 
 void vulkan::VulkanRenderer::Cleanup()
@@ -85,4 +86,5 @@ vulkan::VulkanRenderer::VulkanRenderer(GLFWwindow* window, VkPresentModeKHR pres
 	{
 		std::cout << "Init vulkan Failed!" << std::endl;
 	}
+	
 }

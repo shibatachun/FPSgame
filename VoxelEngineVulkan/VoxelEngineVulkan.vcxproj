@@ -133,6 +133,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\GraphicAPI\DirectX\D3DClasses.cpp" />
+    <ClCompile Include="src\GraphicAPI\DirectX\DirectX11Renderer.cpp" />
     <ClCompile Include="src\GraphicAPI\RenderFactory.cpp" />
     <ClCompile Include="src\GraphicAPI\Vulkan\VulkanRenderer.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -141,6 +143,9 @@
     <ClCompile Include="src\GraphicAPI\Vulkan\VulkanClasses.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\GraphicAPI\DirectX\D3DClasses.h" />
+    <ClInclude Include="src\GraphicAPI\DirectX\D3DCommonUtils.hpp" />
+    <ClInclude Include="src\GraphicAPI\DirectX\DirectX11Renderer.h" />
     <ClInclude Include="src\GraphicAPI\RenderFactory.h" />
     <ClInclude Include="src\GraphicAPI\IRenderer.h" />
     <ClInclude Include="src\GraphicAPI\Vulkan\VulkanCommon.h" />

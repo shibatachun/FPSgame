@@ -1,6 +1,9 @@
 #include "utils/GlfwHelper.h"
 #include "GraphicAPI/RenderFactory.h"
 
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h> 
+
 
 int main() {
 	uint32_t width = 1280;
@@ -11,6 +14,7 @@ int main() {
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
+		renderer->DrawFrame();
 	}
 	glfwDestroyWindow(window);
 	glfwTerminate();

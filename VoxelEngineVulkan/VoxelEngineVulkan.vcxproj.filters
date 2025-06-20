@@ -33,6 +33,12 @@
     <ClCompile Include="src\GraphicAPI\Vulkan\VulkanClasses.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\GraphicAPI\DirectX\DirectX11Renderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GraphicAPI\DirectX\D3DClasses.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\utils\GlfwHelper.h">
@@ -60,6 +66,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\GraphicAPI\Vulkan\VulkanCommon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GraphicAPI\DirectX\DirectX11Renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GraphicAPI\DirectX\D3DClasses.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GraphicAPI\DirectX\D3DCommonUtils.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
