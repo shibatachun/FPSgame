@@ -47,3 +47,49 @@ bool D3D11::D3DClass::Initialize(int screenWidth, int scrfeenHeight, bool vsync,
 	return false;
 }
 
+void D3D11::D3DClass::Shutdown()
+{
+}
+
+void D3D11::D3DClass::BeginScene(float, float, float, float)
+{
+}
+
+void D3D11::D3DClass::EndScene()
+{
+}
+
+ID3D11Device* D3D11::D3DClass::GetDevice()
+{
+	return nullptr;
+}
+
+ID3D11DeviceContext* D3D11::D3DClass::GetDeviceContext()
+{
+	return nullptr;
+}
+
+void D3D11::D3DClass::GetProjectionMatrix(XMMATRIX&)
+{
+}
+
+void D3D11::D3DClass::GetWorldMatrix(XMMATRIX&)
+{
+}
+
+void D3D11::D3DClass::GetOrthoMatrix(XMMATRIX&)
+{
+}
+
+void D3D11::D3DClass::GetVideoCardInfo(char*, int&)
+{
+}
+
+void D3D11::D3DClass::SetBackBufferRenderTarget()
+{
+}
+
+void D3D11::D3DClass::ResetViewport()
+{
+}
+

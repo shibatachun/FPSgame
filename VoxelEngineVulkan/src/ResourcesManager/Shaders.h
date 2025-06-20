@@ -2,24 +2,25 @@
 #include "AssetCommonUtils.h"
 namespace asset
 {
-	struct shader
-	{
+	struct shader{
 		std::vector<char> vertexShader;
 		std::vector<char> fragmentShader;
 	};
 
 
-	class Shaders
-	{
+	class ShadersManager{
 	public:
-		Shaders(std::string & filepath);
-		~Shaders();
-		const shader VulkanShaders() { return _vulkanShaders; };
-		const shader D3DShaders() { return _d3dShaders; };
+		ShadersManager(std::string dir);
+		~ShadersManager();
+		shader loadVulkanShaderFromFiles(const std::string& filename);
+		shader loadD3DShaderFromFiles(const std::string& filename);
+
 	private:
-		void loadShaderFromFiles(const std::string& filename);
-		shader _vulkanShaders;
-		shader _d3dShaders;
+	
+	private:
+		std::vector<FileInfo> _vulkan_shaders;
+		std::vector<FileInfo>_d3d_shaders;
+
 	};
 
 }

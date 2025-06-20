@@ -12,11 +12,13 @@ bool asset::AssetManager::Init()
 {
 	std::filesystem::path cwd = std::filesystem::current_path();
 	std::cout << "AssetManager当前工作目录" << cwd.string() << std::endl;
-	loadShaderAssets("res/shaders");
+	_shadersManager.reset(new asset::ShadersManager("res/shaders"));
+	loadShaderAssets();
+	
 	return true;
 }
 
-void asset::AssetManager::loadShaderAssets(std::string filepath)
+void asset::AssetManager::loadShaderAssets()
 {
-	_shaderAssets.emplace("Triangle", filepath);
+	_shaderAssets.emplace("Triangle_Vulkan", _shadersManager->loadVulkanShaderFromFiles("triangle"));
 }
