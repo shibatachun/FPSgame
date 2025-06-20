@@ -1,10 +1,8 @@
 #pragma once
 #include "AssetCommonUtils.h"
 #include "Shaders.h"
-namespace asset
-{
-	class AssetManager final
-	{
+namespace asset {
+	class AssetManager final {
 	public:
 		AssetManager();
 		~AssetManager();

@@ -1,9 +1,7 @@
 #pragma once
 #include "VulkanCommon.h"
-namespace vulkan
-{
-	class Instance final
-	{
+namespace vulkan {
+	class Instance final {
 	public:
 		VULKAN_NON_COPIABLE(Instance);
 		Instance(GLFWwindow* window);
@@ -34,8 +32,7 @@ namespace vulkan
 
 	};
 
-	class Surface final
-	{
+	class Surface final {
 	public:
 		VULKAN_NON_COPIABLE(Surface)
 		explicit Surface(const Instance& instance);
@@ -48,8 +45,7 @@ namespace vulkan
 		VULKAN_HANDLE(VkSurfaceKHR, surface_);
 	};
 
-	class DebugUtilsMessenger final
-	{
+	class DebugUtilsMessenger final {
 	public:
 		VULKAN_NON_COPIABLE(DebugUtilsMessenger)
 		DebugUtilsMessenger(const Instance& instance, VkDebugUtilsMessageSeverityFlagBitsEXT threshold);
@@ -63,8 +59,7 @@ namespace vulkan
 		VULKAN_HANDLE(VkDebugUtilsMessengerEXT, messenger_)
 	};
 
-	class DebugUtils final
-	{
+	class DebugUtils final {
 	public:
 
 		VULKAN_NON_COPIABLE(DebugUtils)
@@ -149,8 +144,7 @@ namespace vulkan
 
 	};
 
-	class SwapChain final
-	{
+	class SwapChain final {
 	public:
 		VULKAN_NON_COPIABLE(SwapChain)
 		SwapChain(const Device& device, VkPresentModeKHR presentationMode);
@@ -183,8 +177,7 @@ namespace vulkan
 
 	};
 
-	class GraphicPipeline final
-	{
+	class GraphicPipeline final {
 	public:
 		VULKAN_NON_COPIABLE(GraphicPipeline)
 		GraphicPipeline();
