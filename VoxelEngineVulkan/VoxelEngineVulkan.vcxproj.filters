@@ -39,6 +39,12 @@
     <ClCompile Include="src\GraphicAPI\DirectX\D3DClasses.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ResourcesManager\AssetManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ResourcesManager\Shaders.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\utils\GlfwHelper.h">
@@ -77,5 +83,26 @@
     <ClInclude Include="src\GraphicAPI\DirectX\D3DCommonUtils.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ResourcesManager\AssetManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ResourcesManager\AssetCommonUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ResourcesManager\Shaders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\TypeDefine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\shaders\triangle.vert" />
+    <None Include="res\shaders\triangle.frag" />
+    <None Include="res\shaders\compileShader.bat">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="res\shaders\triangle.frag.spv" />
+    <None Include="res\shaders\triangle.vert.spv" />
   </ItemGroup>
 </Project>

@@ -182,6 +182,16 @@ namespace vulkan
 		std::vector<VkImageView> _imageViews;
 
 	};
+
+	class GraphicPipeline final
+	{
+	public:
+		VULKAN_NON_COPIABLE(GraphicPipeline)
+		GraphicPipeline();
+		~GraphicPipeline();
+	private:
+
+	};
 	
 	
 }

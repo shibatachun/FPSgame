@@ -23,9 +23,8 @@ namespace vulkan
 		std::unique_ptr<class vulkan::DebugUtilsMessenger> _debugMessenger;
 		std::unique_ptr<class vulkan::Device> _devices;
 		std::unique_ptr<class vulkan::SwapChain> _swaphcin;
-	
-		VkImageView _imageView = VK_NULL_HANDLE;
 		VkRenderPass _renderPass = VK_NULL_HANDLE;
+		
 		VkPipeline _graphicsPipline = VK_NULL_HANDLE;
 	private:
 		void SetPhysicalDevices();

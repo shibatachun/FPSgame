@@ -133,6 +133,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\ResourcesManager\Shaders.cpp" />
+    <ClCompile Include="src\ResourcesManager\AssetManager.cpp" />
     <ClCompile Include="src\GraphicAPI\DirectX\D3DClasses.cpp" />
     <ClCompile Include="src\GraphicAPI\DirectX\DirectX11Renderer.cpp" />
     <ClCompile Include="src\GraphicAPI\RenderFactory.cpp" />
@@ -143,6 +145,9 @@
     <ClCompile Include="src\GraphicAPI\Vulkan\VulkanClasses.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ResourcesManager\Shaders.h" />
+    <ClInclude Include="src\ResourcesManager\AssetCommonUtils.h" />
+    <ClInclude Include="src\ResourcesManager\AssetManager.h" />
     <ClInclude Include="src\GraphicAPI\DirectX\D3DClasses.h" />
     <ClInclude Include="src\GraphicAPI\DirectX\D3DCommonUtils.hpp" />
     <ClInclude Include="src\GraphicAPI\DirectX\DirectX11Renderer.h" />
@@ -150,11 +155,19 @@
     <ClInclude Include="src\GraphicAPI\IRenderer.h" />
     <ClInclude Include="src\GraphicAPI\Vulkan\VulkanCommon.h" />
     <ClInclude Include="src\GraphicAPI\Vulkan\VulkanRenderer.h" />
+    <ClInclude Include="src\utils\TypeDefine.h" />
     <ClInclude Include="src\utils\GlfwHelper.h" />
     <ClInclude Include="src\utils\GlslangCompiler.h" />
     <ClInclude Include="src\utils\minilog.h" />
     <ClInclude Include="src\utils\ScopeExit.h" />
     <ClInclude Include="src\GraphicAPI\Vulkan\VulkanClasses.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\shaders\compileShader.bat" />
+    <None Include="res\shaders\triangle.frag" />
+    <None Include="res\shaders\triangle.frag.spv" />
+    <None Include="res\shaders\triangle.vert" />
+    <None Include="res\shaders\triangle.vert.spv" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
