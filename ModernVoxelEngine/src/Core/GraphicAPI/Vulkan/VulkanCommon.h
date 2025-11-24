@@ -445,7 +445,7 @@ namespace vulkan {
 			glm::mat4 view;
 			glm::mat4 projectionInverse;
 			glm::mat4 viewInverse;
-			glm::vec4 lightPos = glm::vec4(0.0f, 2.5f, 0.0f, 1.0f);
+			glm::vec4 lightPos;
 			glm::vec4 viewPos;
 
 		} values;
@@ -485,7 +485,7 @@ namespace vulkan {
 		std::string name;
 		VkPipeline pipeline;
 		VkPipelineLayout Pipelinelayout;
-		VkDescriptorSet descriptorSet{ VK_NULL_HANDLE };
+		utils::vector<VkDescriptorSet> descriptorSets;
 
 		struct DescriptorSetLayouts {
 			VkDescriptorSetLayout matrices{ VK_NULL_HANDLE };

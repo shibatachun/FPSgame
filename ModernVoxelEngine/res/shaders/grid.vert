@@ -6,8 +6,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
     mat4 view;
     mat4 projInverse;
     mat4 viewInverse; // 必须传逆矩阵，用于还原世界坐标
-    vec4 lightPos;
-	vec4 viewPos;
+
 } ubo;
 
 layout(location = 0) out vec3 outNearPoint;

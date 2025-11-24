@@ -2372,7 +2372,7 @@ void vulkan::VulkanResouceManager::ConstructVulkanRenderObject(std::string name,
 		}
 		
 	}
-
+	renderObject.descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 	renderObject.indiceCounts.push_back(static_cast<uint32_t>(modeldata.indices.size()));
 	_renderObjectsMapping[name] = static_cast<uint32_t>(_renderObjects.size());
 	_renderObjects.push_back(renderObject);

@@ -10,6 +10,7 @@ asset::ShadersManager::ShadersManager(std::string dir) :
 	ConstructShader("SkySphere", "skysphere_vert", "skysphere_frag");
 	ConstructShader("scene", "scene_vert", "scene_frag");
 	ConstructShader("grid", "grid_vert", "grid_frag");
+	ConstructShader("sky", "triangle_vert", "sky_frag");
 }
 
 asset::ShadersManager::~ShadersManager(){

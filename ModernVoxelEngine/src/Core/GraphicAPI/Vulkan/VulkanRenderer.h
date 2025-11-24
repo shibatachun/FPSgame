@@ -7,12 +7,35 @@
 
 namespace vulkan
 {
-	struct DebugPipeline {
-		VkDescriptorSet _set;
+	struct PostProcedurePass {
+		utils::vector<VkDescriptorSet> _sets;
 		VkDescriptorSetLayout _setLayout;
 		VkPipelineLayout _pipelineLayout;
 		VkPipeline _pipeline;
 	};
+
+	
+	struct SkyData{
+		Buffer buffer;
+		struct SkyUBOValue {
+			glm::mat4 projInverse;
+			glm::mat4 viewInverse;
+			//glm::vec4 cameraPos;
+			glm::vec4 sunDirection;
+			glm::vec2 screenSize;
+		} values;
+	};
+
+	struct GridData{
+		Buffer buffer;
+		struct GridUBOValue {
+			glm::mat4 proj;
+			glm::mat4 view;
+			glm::mat4 projInverse;
+			glm::mat4 viewInverse;
+		} values;
+	};
+
 	class VulkanRenderer : public IRenderer
 	{
 	public:
@@ -60,8 +83,12 @@ namespace vulkan
 		std::vector<VkBuffer>									_uniformBuffers;
 		std::vector<VkDeviceMemory>								_uniformBuffersMemory;
 		std::vector<void*>										_uniformBuffersMapped;
+		std::vector<void*>										_skyDataBuffersMapped;
+		std::vector<void*>										_gridDataBuffersMapped;
 		
 		std::vector<ShaderData>									_uniformData;
+		std::vector<SkyData>									_skyData;
+		std::vector<GridData>									_gridData;
 		uint32_t												_currentFrame = 0;
 		
 		
@@ -69,7 +96,10 @@ namespace vulkan
 		VkDescriptorSetLayout descriptorSetLayoutUbo = VK_NULL_HANDLE;
 		VkMemoryPropertyFlags memoryPropertyFlags = 0;
 		std::unique_ptr<VulkanGraphicResourceManager>			_GpuResouce;
-		DebugPipeline											_debugPipeline;
+		PostProcedurePass 										_debugPipeline;
+		PostProcedurePass										_skyPass;
+		glm::vec3												_sunDir;
+
 
 		std::vector<VulkanRenderObject>							_renderObjects;
 		
@@ -95,10 +125,13 @@ namespace vulkan
 		void ConfigureDescriptorSet(VulkanRenderObject& object);
 		void ConfigurePipeline(VulkanRenderObject& object);
 		void UpdateUniformBuffer(uint32_t currentImage);
+		void UpdateSkyBuffer(uint32_t currentImage);
+		void UpdateGridBuffer(uint32_t currentImage);
 		bool IsMinimized() const;
 		void PrepareRenderObject();
 		void BuildCommandBuffer();
 		void CreateDebugPipeline();
+		void CreateSkyPipeline();
 
 
 	};

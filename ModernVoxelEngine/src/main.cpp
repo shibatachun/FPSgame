@@ -51,7 +51,15 @@ static void test_input(InputSystem* input) {
 		gCamera.rotate(glm::vec3(delta.y,-delta.x , 0.0f));
 	}
 }
+static float sunAngle = 0.0f;
 
+static void UpdateSundir(float deltatime) {
+	sunAngle += deltatime * 0.1f;
+	gCamera.sunDir.x = 0.3f;
+	gCamera.sunDir.y = sin(sunAngle);
+	gCamera.sunDir.z = cos(sunAngle);
+	gCamera.sunDir = glm::normalize(gCamera.sunDir);
+}
 int main (int argc, char* argv[]) {
 	uint32_t width = 1920;
 	uint32_t height = 1080;
@@ -98,7 +106,7 @@ int main (int argc, char* argv[]) {
 		frameTimer = (float)tDiff / 1000.0f;
 		test_input(&input);
 		input.Update(frameTimer);
-		
+		UpdateSundir(frameTimer);
 		gCamera.update(frameTimer);
 		window.UpdateFPS();
 		//TitleFps("lihai", window);

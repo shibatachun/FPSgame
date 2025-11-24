@@ -10,8 +10,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
     mat4 view;
     mat4 projInverse;
     mat4 viewInverse;
-    vec4 lightPos;
-	vec4 viewPos;
+
 } ubo;
 
 // 1. 无限平面生成网格纹理的函数

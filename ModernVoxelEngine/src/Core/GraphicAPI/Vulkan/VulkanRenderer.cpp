@@ -29,6 +29,8 @@ void vulkan::VulkanRenderer::DrawFrame()
 	vkResetFences(_devices->Handle(), 1, &_inFlightFences[_currentFrame]);
 	//vkResetCommandBuffer(_commandBuffers[_currentFrame], 0);
 	UpdateUniformBuffer(_currentFrame);
+	UpdateGridBuffer(_currentFrame);
+	UpdateSkyBuffer(_currentFrame);
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -145,6 +147,7 @@ bool vulkan::VulkanRenderer::InitVulkan()
 
 	PrepareRenderObject();
 	CreateDebugPipeline();
+	CreateSkyPipeline();
 	BuildCommandBuffer();
 	
 	return true;
@@ -361,10 +364,14 @@ void vulkan::VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, 
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _debugPipeline._pipeline);
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _debugPipeline._pipelineLayout, 0, 1, &_debugPipeline._set, 0, nullptr);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _skyPass._pipeline);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _skyPass._pipelineLayout, 0, 1, &_skyPass._sets[imageIndex], 0, nullptr);
 	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object.Pipelinelayout, 0, 1, &object.descriptorSet, 0, nullptr);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _debugPipeline._pipeline);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _debugPipeline._pipelineLayout, 0, 1, &_debugPipeline._sets[imageIndex], 0, nullptr);
+	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+	
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object.Pipelinelayout, 0, 1, &object.descriptorSets[imageIndex], 0, nullptr);
 	object.Draw(commandBuffer, object.Pipelinelayout);
 
 
@@ -402,14 +409,33 @@ void vulkan::VulkanRenderer::CreateUniformBuffers()
 	_uniformData.resize(MAX_FRAMES_IN_FLIGHT);
 	_uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
 
+	_skyData.resize(MAX_FRAMES_IN_FLIGHT);
+	_skyDataBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+	
+	_gridData.resize(MAX_FRAMES_IN_FLIGHT);
+	_gridDataBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
-
+		//Scenc UBO
 		_bufferManager->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, sizeof(_uniformData[i].values),
 			&_uniformData[i].buffer.buffer, &_uniformData[i].buffer.memory);
 		_uniformData[i].buffer.setupDescriptor();
 		_uniformData[i].buffer.map(_devices->Handle());
+		//Sky UBO
+		_bufferManager->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, sizeof(_skyData[i].values),
+			&_skyData[i].buffer.buffer, &_skyData[i].buffer.memory);
+		_skyData[i].buffer.setupDescriptor();
+		_skyData[i].buffer.map(_devices->Handle());
+
+		//Grid UBO
+		_bufferManager->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, sizeof(_gridData[i].values),
+			&_gridData[i].buffer.buffer, &_gridData[i].buffer.memory);
+		_gridData[i].buffer.setupDescriptor();
+		_gridData[i].buffer.map(_devices->Handle());
 	}
 }
 
@@ -417,9 +443,9 @@ void vulkan::VulkanRenderer::CreateUniformBuffers()
 
 void vulkan::VulkanRenderer::ConfigureDescriptorSet(VulkanRenderObject& object)
 {
-	if (object.descriptorSet == VK_NULL_HANDLE) {
+	if (object.descriptorSets.size() == MAX_FRAMES_IN_FLIGHT) {
 		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-			_descriptorPools->AllocateDescriptorSet(object.descriptorSetLayouts.matrices, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, object.descriptorSet, 0, _uniformData[i].buffer.descriptor, i);
+			_descriptorPools->AllocateDescriptorSet(object.descriptorSetLayouts.matrices, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, object.descriptorSets[i], 0, _uniformData[i].buffer.descriptor, i);
 
 		}
 	}
@@ -495,10 +521,27 @@ void vulkan::VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
 	_uniformData[currentImage].values.projection =	gCamera.matrices.perspective;
 	_uniformData[currentImage].values.viewInverse = glm::inverse(gCamera.matrices.view);
 	_uniformData[currentImage].values.projectionInverse = glm::inverse(gCamera.matrices.perspective);
+	_uniformData[currentImage].values.lightPos = glm::vec4(gCamera.sunDir, 0.0f);
 	_uniformData[currentImage].values.viewPos = gCamera.viewPos;
 	memcpy(_uniformData[currentImage].buffer.mapped, &_uniformData[currentImage].values, sizeof(_uniformData[currentImage].values));
 }
+void vulkan::VulkanRenderer::UpdateSkyBuffer(uint32_t currentImage) {
+	_skyData[currentImage].values.viewInverse = glm::inverse(gCamera.matrices.view);
+	_skyData[currentImage].values.projInverse = glm::inverse(gCamera.matrices.perspective);
+	//_skyData[currentImage].values.cameraPos = gCamera.viewPos;
+	
+	_skyData[currentImage].values.sunDirection = glm::vec4(gCamera.sunDir, 0.0f);
+	_skyData[currentImage].values.screenSize = glm::vec2((float)_swapchain->GetSwapchainExtent().width, (float)_swapchain->GetSwapchainExtent().height);
+	memcpy(_skyData[currentImage].buffer.mapped, &_skyData[currentImage].values, sizeof(_skyData[currentImage].values));
 
+}
+void vulkan::VulkanRenderer::UpdateGridBuffer(uint32_t currentImage) {
+	_gridData[currentImage].values.view = gCamera.matrices.view;
+	_gridData[currentImage].values.proj = gCamera.matrices.perspective;
+	_gridData[currentImage].values.viewInverse = glm::inverse(gCamera.matrices.view);
+	_gridData[currentImage].values.projInverse = glm::inverse(gCamera.matrices.perspective);
+	memcpy(_gridData[currentImage].buffer.mapped, &_gridData[currentImage].values, sizeof(_gridData[currentImage].values));
+}
 bool vulkan::VulkanRenderer::IsMinimized() const
 {
 	int width, height;
@@ -553,8 +596,9 @@ void vulkan::VulkanRenderer::CreateDebugPipeline()
 	vkCreateDescriptorSetLayout(_devices->Handle(), &layoutInfo, nullptr, &_debugPipeline._setLayout);
 	
 	VkDescriptorSetLayout setLayouts[] = { _debugPipeline._setLayout };
+	_debugPipeline._sets.resize(MAX_FRAMES_IN_FLIGHT);
 	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		_descriptorPools->AllocateDescriptorSet(_debugPipeline._setLayout, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, _debugPipeline._set, 0, _uniformData[i].buffer.descriptor, i);
+		_descriptorPools->AllocateDescriptorSet(_debugPipeline._setLayout, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, _debugPipeline._sets[i], 0, _gridData[i].buffer.descriptor, i);
 	}
 	
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -591,6 +635,61 @@ void vulkan::VulkanRenderer::CreateDebugPipeline()
 
 	
 	
+}
+
+void vulkan::VulkanRenderer::CreateSkyPipeline()
+{
+	VkDescriptorSetLayoutBinding uboLayoutBinding{};
+	uboLayoutBinding.binding = 0;
+	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uboLayoutBinding.descriptorCount = 1;
+	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+
+	VkDescriptorSetLayoutCreateInfo layoutInfo{};
+	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutInfo.bindingCount = 1;
+	layoutInfo.pBindings = &uboLayoutBinding;
+
+	vkCreateDescriptorSetLayout(_devices->Handle(), &layoutInfo, nullptr, &_skyPass._setLayout);
+
+	VkDescriptorSetLayout setLayouts[] = { _skyPass._setLayout };
+	_skyPass._sets.resize(MAX_FRAMES_IN_FLIGHT);
+	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		_descriptorPools->AllocateDescriptorSet(_skyPass._setLayout, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, _skyPass._sets[i], 0, _skyData[i].buffer.descriptor, i);
+	}
+
+
+	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &_debugPipeline._setLayout;
+	pipelineLayoutInfo.pushConstantRangeCount = 0;
+	pipelineLayoutInfo.pPushConstantRanges = nullptr;
+	vkCreatePipelineLayout(_devices->Handle(), &pipelineLayoutInfo, nullptr, &_skyPass._pipelineLayout);
+
+	graphicsPipelineCreateInfoPack GPCI;
+	GPCI.inputAssemblyStateCi = initializers::pipelineInputAssemblyStateCreateInfo(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 0, VK_FALSE);
+	GPCI.rasterizationStateCi = initializers::pipelineRasterizationStateCreateInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE, 0);
+	GPCI.colorBlendAttachmentStates.push_back(initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE));
+	GPCI.depthStencilStateCi = initializers::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL);
+	GPCI.viewportStateCi = initializers::pipelineViewportStateCreateInfo(1, 1, 0);
+	GPCI.multisampleStateCi = initializers::pipelineMultisampleStateCreateInfo(VK_SAMPLE_COUNT_1_BIT, 0);
+	VkPipelineVertexInputStateCreateInfo vertexInput{};
+	vertexInput.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	vertexInput.vertexBindingDescriptionCount = 0;
+	vertexInput.vertexAttributeDescriptionCount = 0;
+	GPCI.vertexInputStateCi = vertexInput;
+	GPCI.dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
+	GPCI.dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR);
+	GPCI.createInfo.layout = _skyPass._pipelineLayout;
+	GPCI.createInfo.renderPass = _renderPass->GetRenderPass();
+	GPCI.createInfo.stageCount = 2;
+	GPCI.shaderStages.resize(2);
+	const auto& shader = _assetManager.getShaderByName("sky");
+	_skyPass._pipeline = _graphicsPipline->CreateGraphicsPipeline("sky_pipeline", GPCI, shader);
+
 }
 
 
