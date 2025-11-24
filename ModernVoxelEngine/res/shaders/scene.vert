@@ -10,6 +10,8 @@ layout (set = 0, binding = 0) uniform UBOScene
 {
 	mat4 projection;
 	mat4 view;
+	mat4 projectionInverse;
+	mat4 viewInverse;
 	vec4 lightPos;
 	vec4 viewPos;
 } uboScene;

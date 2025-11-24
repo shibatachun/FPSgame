@@ -7,6 +7,12 @@
 
 namespace vulkan
 {
+	struct DebugPipeline {
+		VkDescriptorSet _set;
+		VkDescriptorSetLayout _setLayout;
+		VkPipelineLayout _pipelineLayout;
+		VkPipeline _pipeline;
+	};
 	class VulkanRenderer : public IRenderer
 	{
 	public:
@@ -63,7 +69,7 @@ namespace vulkan
 		VkDescriptorSetLayout descriptorSetLayoutUbo = VK_NULL_HANDLE;
 		VkMemoryPropertyFlags memoryPropertyFlags = 0;
 		std::unique_ptr<VulkanGraphicResourceManager>			_GpuResouce;
-	
+		DebugPipeline											_debugPipeline;
 
 		std::vector<VulkanRenderObject>							_renderObjects;
 		
@@ -92,6 +98,7 @@ namespace vulkan
 		bool IsMinimized() const;
 		void PrepareRenderObject();
 		void BuildCommandBuffer();
+		void CreateDebugPipeline();
 
 
 	};

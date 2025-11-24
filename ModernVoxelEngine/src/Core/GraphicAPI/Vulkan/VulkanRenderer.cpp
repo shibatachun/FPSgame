@@ -144,6 +144,7 @@ bool vulkan::VulkanRenderer::InitVulkan()
 	//CreateUniformBuffers();
 
 	PrepareRenderObject();
+	CreateDebugPipeline();
 	BuildCommandBuffer();
 	
 	return true;
@@ -326,6 +327,7 @@ void vulkan::VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, 
 	vkBeginCommandBuffer(commandBuffer, &beginInfo);
 	//Check(vkBeginCommandBuffer(commandBuffer, &beginInfo), "Start record commandbuffer");
 
+
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = _renderPass->GetRenderPass();
@@ -357,8 +359,11 @@ void vulkan::VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, 
 	scissor.extent = _swapchain->GetSwapchainExtent();
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _debugPipeline._pipeline);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _debugPipeline._pipelineLayout, 0, 1, &_debugPipeline._set, 0, nullptr);
+	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object.Pipelinelayout, 0, 1, &object.descriptorSet, 0, nullptr);
 	object.Draw(commandBuffer, object.Pipelinelayout);
 
@@ -488,6 +493,8 @@ void vulkan::VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
 	
 	_uniformData[currentImage].values.view=	gCamera.matrices.view;
 	_uniformData[currentImage].values.projection =	gCamera.matrices.perspective;
+	_uniformData[currentImage].values.viewInverse = glm::inverse(gCamera.matrices.view);
+	_uniformData[currentImage].values.projectionInverse = glm::inverse(gCamera.matrices.perspective);
 	_uniformData[currentImage].values.viewPos = gCamera.viewPos;
 	memcpy(_uniformData[currentImage].buffer.mapped, &_uniformData[currentImage].values, sizeof(_uniformData[currentImage].values));
 }
@@ -528,6 +535,62 @@ void vulkan::VulkanRenderer::BuildCommandBuffer()
 		}
 	}
 
+}
+
+void vulkan::VulkanRenderer::CreateDebugPipeline()
+{
+	VkDescriptorSetLayoutBinding uboLayoutBinding{};
+	uboLayoutBinding.binding = 0;
+	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uboLayoutBinding.descriptorCount = 1;
+	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+	VkDescriptorSetLayoutCreateInfo layoutInfo{};
+	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutInfo.bindingCount = 1;
+	layoutInfo.pBindings = &uboLayoutBinding;
+	
+	vkCreateDescriptorSetLayout(_devices->Handle(), &layoutInfo, nullptr, &_debugPipeline._setLayout);
+	
+	VkDescriptorSetLayout setLayouts[] = { _debugPipeline._setLayout };
+	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		_descriptorPools->AllocateDescriptorSet(_debugPipeline._setLayout, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, _debugPipeline._set, 0, _uniformData[i].buffer.descriptor, i);
+	}
+	
+	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &_debugPipeline._setLayout;
+	pipelineLayoutInfo.pushConstantRangeCount = 0;
+	pipelineLayoutInfo.pPushConstantRanges = nullptr;
+	vkCreatePipelineLayout(_devices->Handle(), &pipelineLayoutInfo, nullptr, &_debugPipeline._pipelineLayout);
+
+	graphicsPipelineCreateInfoPack GPCI;
+	GPCI.inputAssemblyStateCi = initializers::pipelineInputAssemblyStateCreateInfo(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 0, VK_FALSE);
+	GPCI.rasterizationStateCi = initializers::pipelineRasterizationStateCreateInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE, 0);
+	GPCI.colorBlendAttachmentStates.push_back(initializers::pipelineColorBlendAttachmentState(0xf,VK_FALSE));
+	GPCI.depthStencilStateCi = initializers::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL);
+	GPCI.viewportStateCi = initializers::pipelineViewportStateCreateInfo(1, 1, 0);
+	GPCI.multisampleStateCi = initializers::pipelineMultisampleStateCreateInfo(VK_SAMPLE_COUNT_1_BIT, 0);
+	VkPipelineVertexInputStateCreateInfo vertexInput{};
+	vertexInput.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	vertexInput.vertexBindingDescriptionCount = 0;
+	vertexInput.vertexAttributeDescriptionCount = 0;
+	GPCI.vertexInputStateCi = vertexInput;
+	GPCI.dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
+	GPCI.dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR);
+	GPCI.createInfo.layout = _debugPipeline._pipelineLayout;
+	GPCI.createInfo.renderPass = _renderPass->GetRenderPass();
+	GPCI.createInfo.stageCount = 2;
+	GPCI.shaderStages.resize(2);
+	const auto& shader = _assetManager.getShaderByName("grid");
+	_debugPipeline._pipeline = _graphicsPipline->CreateGraphicsPipeline("debug_pipeline", GPCI, shader);
+	//_debugPipeline._pipeline = _graphicsPipline->DebugPipelineTest(shader, _debugPipeline._pipelineLayout);
+
+
+	
+	
 }
 
 

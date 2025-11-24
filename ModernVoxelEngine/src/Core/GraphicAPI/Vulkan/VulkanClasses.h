@@ -374,6 +374,7 @@ namespace vulkan {
 		VkPipelineLayout GetGraphicsPipelineLayout(std::string piplineLayoutName);
 		void CreateGraphicsPipeline(std::string pipelineName, VkPipelineLayout layout, const asset::shader& shaders, VkRenderPass renderPass);
 		VkPipeline CreateGraphicsPipeline(std::string pipelineName, graphicsPipelineCreateInfoPack& pack, const asset::shader& shaders);
+		VkPipeline DebugPipelineTest(const asset::shader& shaders, VkPipelineLayout layout);
 
 		~GraphicPipelineManager();
 	private:

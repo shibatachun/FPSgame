@@ -73,5 +73,6 @@ namespace d3d12 {
           
 #else
 #define NAME_D3D12_OBJECT(x, name)
+#define NAME_D3D12_OBJECT_INDEXED(obj, n ,name)
 #endif
 }
