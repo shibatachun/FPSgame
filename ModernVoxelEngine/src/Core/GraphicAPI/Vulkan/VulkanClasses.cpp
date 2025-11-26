@@ -1486,13 +1486,18 @@ void vulkan::DescriptorPoolManager::CreatePoolForIndividualObject(uint32_t uboCo
 	_test_pool.emplace(objectName, pool);
 }
 
-void vulkan::DescriptorPoolManager::AllocateDescriptorSet(VkDescriptorSetLayout& layout,VkDescriptorType type, VkDescriptorSet& desSet, uint32_t binding, VkDescriptorBufferInfo& desInfo, int index)
+void vulkan::DescriptorPoolManager::AllocateDescriptorSet(VkDescriptorSetLayout& layout,VkDescriptorType type, VkDescriptorSet& desSet, uint32_t binding, std::vector<VkDescriptorBufferInfo> desInfo, int index)
 {
 	
 	VkDescriptorSetAllocateInfo allocInfo = initializers::descriptorSetAllocateInfo(_PerFramePool[index], &layout, 1);
 	Check(vkAllocateDescriptorSets(_device.Handle(), &allocInfo, &desSet), "Allocate Descriptor Set");
-	VkWriteDescriptorSet writeDescriptorSet = initializers::writeDescriptorSet(desSet, type, binding, &desInfo);
-	vkUpdateDescriptorSets(_device.Handle(), 1, &writeDescriptorSet, 0, nullptr);
+	std::vector<VkWriteDescriptorSet> writeDescriptorSets;
+	writeDescriptorSets.resize(desInfo.size());
+	for (uint32_t i = 0; i < desInfo.size(); i++) {
+
+		 writeDescriptorSets[i] = initializers::writeDescriptorSet(desSet, type, i, &desInfo[i]);
+	}
+	vkUpdateDescriptorSets(_device.Handle(), static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, nullptr);
 	
 
 }
@@ -2338,7 +2343,9 @@ void vulkan::VulkanResouceManager::ConstructVulkanRenderObject(std::string name,
 	//生成vertex shader的关于矩阵变换的layout
 	{
 		LayoutConfig configVertex{};
-		configVertex.bindings.push_back(initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 0));
+		configVertex.bindings.push_back(initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<uint32_t>(configVertex.bindingCounts)));
+		configVertex.UpdateAllArray();
+		configVertex.bindings.push_back(initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT ,static_cast<uint32_t>(configVertex.bindingCounts)));
 		configVertex.UpdateAllArray();
 		renderObject.descriptorSetLayouts.matrices = _descriptorLayoutManager.CreateDescriptorSetLayout(configVertex);
 		for (auto node : modeldata.linearNodeHierarchy) {

@@ -42,4 +42,14 @@ namespace utils {
 
     template<typename T>
     using vector = std::vector<T>;
+
+    template<typename T>
+    void printVec(const T& v) {
+        std::cout << "(";
+        for (int i = 0; i < v.length(); i++) {
+            std::cout << v[i];
+            if (i < v.length() - 1) std::cout << ", ";
+        }
+        std::cout << ")\n";
+    }
 }

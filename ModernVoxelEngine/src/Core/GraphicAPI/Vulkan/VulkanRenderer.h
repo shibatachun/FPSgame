@@ -36,6 +36,15 @@ namespace vulkan
 		} values;
 	};
 
+	struct PBRData {
+		Buffer buffer;
+		struct PBRUBOValue {
+			float metallic = 0.0f;
+			float roughness = 0.5f;
+			float ao = 1.0f;
+			float padding;   // ∂‘∆Î”√
+		} values;
+	};
 	class VulkanRenderer : public IRenderer
 	{
 	public:
@@ -85,10 +94,12 @@ namespace vulkan
 		std::vector<void*>										_uniformBuffersMapped;
 		std::vector<void*>										_skyDataBuffersMapped;
 		std::vector<void*>										_gridDataBuffersMapped;
+		std::vector<void*>										_pbrDataBuffersMapped;
 		
 		std::vector<ShaderData>									_uniformData;
 		std::vector<SkyData>									_skyData;
 		std::vector<GridData>									_gridData;
+		std::vector<PBRData>									_pbrData;
 		uint32_t												_currentFrame = 0;
 		
 		
@@ -127,11 +138,13 @@ namespace vulkan
 		void UpdateUniformBuffer(uint32_t currentImage);
 		void UpdateSkyBuffer(uint32_t currentImage);
 		void UpdateGridBuffer(uint32_t currentImage);
+		void UpdatePBR(uint32_t currentImage);
 		bool IsMinimized() const;
 		void PrepareRenderObject();
 		void BuildCommandBuffer();
 		void CreateDebugPipeline();
 		void CreateSkyPipeline();
+	
 
 
 	};

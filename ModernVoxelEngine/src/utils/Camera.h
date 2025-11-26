@@ -45,7 +45,7 @@ public:
 	glm::vec3 rotation = glm::vec3();
 	glm::vec3 position = glm::vec3();
 	glm::vec4 viewPos = glm::vec4();
-	glm::vec3 sunDir = glm::vec3(0.0f,0.1f,0.0f);
+	glm::vec3 sunDir = glm::vec3(0.0f,0.1f, 0.0f);
 
 	float rotationSpeed = 1.0f;
 	float movementSpeed = 5.0f;

@@ -417,7 +417,7 @@ namespace vulkan {
 		void CreatePerFrameDescriptorPool();
 		void CreatePreFrameDescriptorSets(std::vector<VkDescriptorSetLayout>& layouts);
 		void CreatePoolForIndividualObject(uint32_t uboCount, uint32_t imageCount, std::string objectName);
-		void AllocateDescriptorSet(VkDescriptorSetLayout& layout, VkDescriptorType type, VkDescriptorSet& desSet, uint32_t binding, VkDescriptorBufferInfo& desInfo,int index);
+		void AllocateDescriptorSet(VkDescriptorSetLayout& layout, VkDescriptorType type, VkDescriptorSet& desSet, uint32_t binding, std::vector<VkDescriptorBufferInfo>,int index);
 		void AllocateImageDescriptorSet(Vulkan_Material& material, std::vector<Vulkan_Texture>& textures, VkDescriptorSetLayout layout);
 		void PrepareNodeDescriptor(SceneNode* node, VkDescriptorSetLayout descriptorSetlayout);
 		VkDescriptorPool GetIndividualDescriptorPool(std::string poolname)

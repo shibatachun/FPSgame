@@ -55,7 +55,7 @@ static float sunAngle = 0.0f;
 
 static void UpdateSundir(float deltatime) {
 	sunAngle += deltatime * 0.1f;
-	gCamera.sunDir.x = 0.3f;
+	gCamera.sunDir.x = -0.3f;
 	gCamera.sunDir.y = sin(sunAngle);
 	gCamera.sunDir.z = cos(sunAngle);
 	gCamera.sunDir = glm::normalize(gCamera.sunDir);
