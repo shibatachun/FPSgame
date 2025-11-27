@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/ModernVoxelEngine/res/models/pkg_a_curtains
+/ModernVoxelEngine/res/models/pkg_a_curtains
+/ModernVoxelEngine/res/models/main_sponza
