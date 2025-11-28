@@ -2176,14 +2176,14 @@ vulkan::VulkanResouceManager::VulkanResouceManager(
 	_instance(instance)
 {
 
-
+	CreateDummyTexture();
 
 	
 }
 
 vulkan::VulkanResouceManager::~VulkanResouceManager()
 {
-	for (auto& x : _renderObjects) {
+	for (auto& x : _renderScenes) {
 		_BufferManager.DestroyBuffer(x.indiceBuffer, x.indicememory);
 		_BufferManager.DestroyBuffer(x.vertexBuffer, x.vertexmemory);
 		for (auto& x : x.textures) {
@@ -2210,7 +2210,7 @@ void vulkan::VulkanResouceManager::ConstructVulkanRenderObject(
 	std::vector<std::string> textureFiles)
 {
 	ModelData modeldata = _assetMnanger.getModelDataByName(raw_model_name);
-	VulkanRenderObject renderObject;
+	VulkanRenderScene renderObject;
 	
 	renderObject.name = name;
 	
@@ -2260,14 +2260,14 @@ void vulkan::VulkanResouceManager::ConstructVulkanRenderObject(
 
 	renderObject.indiceCounts.push_back(static_cast<uint32_t>(modeldata.indices.size()));
 
-	_renderObjectsMapping.emplace(name, static_cast<uint32_t>(_renderObjects.size()));
-	_renderObjects.push_back(renderObject);
+	_renderObjectsMapping.emplace(name, static_cast<uint32_t>(_renderScenes.size()));
+	_renderScenes.push_back(renderObject);
 }
 
 void vulkan::VulkanResouceManager::ConstructVulkanRenderObject(std::string name, std::string raw_model_name)
 {
 	ModelData modeldata = _assetMnanger.getModelDataByName(raw_model_name);
-	VulkanRenderObject renderObject;
+	VulkanRenderScene renderObject;
 
 	renderObject.name = name;
 	//生成VKmesh
@@ -2276,7 +2276,7 @@ void vulkan::VulkanResouceManager::ConstructVulkanRenderObject(std::string name,
 		if (x->meshID != -1) {
 			glm::mat4 m = x->getMatrix();
 			const auto& meshdata = modeldata.meshdatas[x->meshID];
-			Vulkan_Mesh* vkmesh = new Vulkan_Mesh{};
+			Vulkan_SkinnedMesh* vkmesh = new Vulkan_SkinnedMesh{};
 			vkmesh->offset = meshdata.meshes;
 			vkmesh->uniformBlock.matrix = meshdata.localTransform;
 			_BufferManager.createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
@@ -2348,9 +2348,7 @@ void vulkan::VulkanResouceManager::ConstructVulkanRenderObject(std::string name,
 		configVertex.bindings.push_back(initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT ,static_cast<uint32_t>(configVertex.bindingCounts)));
 		configVertex.UpdateAllArray();
 		renderObject.descriptorSetLayouts.matrices = _descriptorLayoutManager.CreateDescriptorSetLayout(configVertex);
-		for (auto node : modeldata.linearNodeHierarchy) {
-			prepareNodeDescriptor(node, _descriptorLayoutManager.GetDescriptorSetLayout(configVertex));
-		}
+		
 	}
 	//生成fragment shader的关于material的layout
 	{
@@ -2381,14 +2379,64 @@ void vulkan::VulkanResouceManager::ConstructVulkanRenderObject(std::string name,
 	}
 	renderObject.descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 	renderObject.indiceCounts.push_back(static_cast<uint32_t>(modeldata.indices.size()));
-	_renderObjectsMapping[name] = static_cast<uint32_t>(_renderObjects.size());
-	_renderObjects.push_back(renderObject);
+	_renderObjectsMapping[name] = static_cast<uint32_t>(_renderScenes.size());
+	_renderScenes.push_back(renderObject);
 }
 
-vulkan::VulkanRenderObject& vulkan::VulkanResouceManager::GetRenderObject(std::string name)
+void vulkan::VulkanResouceManager::CreateDebugRenderObject(std::string name, std::string raw_model_name, std::vector<std::string> textureFiles)
+{
+	ModelData modelData = _assetMnanger.getModelDataByName(raw_model_name);
+	VulkanRenderObject object;
+	for (const auto& mesh : modelData.meshdatas) {
+		Vulkan_Mesh vk_mesh;
+		vk_mesh.name = mesh.name;
+		for (const auto& offset : mesh.meshes) {
+			vk_mesh.offset.push_back(offset);
+		}
+	}
+	{
+		LayoutConfig uboLayout;
+		uboLayout.bindings.push_back(initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, uboLayout.bindingCounts));
+		uboLayout.UpdateAllArray();
+		object.descriptorSetLayouts.matrices = _descriptorLayoutManager.CreateDescriptorSetLayout(uboLayout);
+	}
+	{
+		LayoutConfig materialLayout;
+		materialLayout.bindings.push_back(initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, materialLayout.bindingCounts));
+	}
+	//TODO::material
+	{
+		_BufferManager.CreateVertexBuffer1(modelData.vertices, object.vertexBuffer, object.vertexmemory);
+		_BufferManager.CreateIndexBuffer1(modelData.indices, object.indiceBuffer, object.indicememory);
+	}
+	_renderObjects.push_back(object);
+	Vulkan_Material material;
+	material.baseColorTexture = 0;
+
+
+	
+}
+
+void vulkan::VulkanResouceManager::CreateDummyTexture()
+{
+	const Image& dummy_image = _assetMnanger.getImageDataByName("dummy");
+	
+	_dummy_texture.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	_BufferManager.CreateVulkanImageBuffer(dummy_image, _dummy_texture.imageLayout, _dummy_texture.image, _dummy_texture.deviceMemory);
+	_BufferManager.CreateImageView(_dummy_texture.view, _dummy_texture.image, FromFormat(dummy_image.format), VK_IMAGE_ASPECT_COLOR_BIT, dummy_image.mipLevels);
+	_BufferManager.CreateTextureSampler(_dummy_texture.sampler, dummy_image.mipLevels);
+	_dummy_texture.height = dummy_image.texHeight;
+	_dummy_texture.width = dummy_image.texWidth;
+	_dummy_texture.mipLevels = dummy_image.mipLevels;
+	_dummy_texture.updateDescriptor();
+	_dummy_texture.index = dummy_image.id;
+	
+}
+
+vulkan::VulkanRenderScene& vulkan::VulkanResouceManager::GetRenderObject(std::string name)
 {			
 			
-	return _renderObjects[utils::findInMap(_renderObjectsMapping, name)];
+	return _renderScenes[utils::findInMap(_renderObjectsMapping, name)];
 }
 
 VkPipelineShaderStageCreateInfo vulkan::VulkanResouceManager::LoadShader(std::string shader_name, VkShaderStageFlagBits stage)
@@ -2417,7 +2465,7 @@ void vulkan::VulkanResouceManager::ConstructVulkanRenderObject()
 	//1.iterate the raw data sources
 	
 	for (const auto& x : _assetMnanger.getModelDatas()) {
-		VulkanRenderObject object;
+		VulkanRenderScene object;
 		object.name = x.first;
 
 	}
@@ -2441,7 +2489,7 @@ void vulkan::VulkanResouceManager::CreateTextureImageView(VkImageView& imageview
 
 }
 
-void vulkan::VulkanResouceManager::ConstructSceneNode(SceneNode* parent, Node* sourceNode, VulkanRenderObject& object, ModelData& modelData)
+void vulkan::VulkanResouceManager::ConstructSceneNode(SceneNode* parent, Node* sourceNode, VulkanRenderScene& object, ModelData& modelData)
 {
 	SceneNode* node = new SceneNode{};
 	

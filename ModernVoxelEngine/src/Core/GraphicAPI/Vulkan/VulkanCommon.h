@@ -379,7 +379,7 @@ namespace vulkan {
 		return setLayoutBinding;
 	}
 
-	struct Vulkan_Mesh {
+	struct Vulkan_SkinnedMesh {
 		std::vector<Mesh> offset;
 		std::string name;
 		struct UniformBuffer {
@@ -395,9 +395,13 @@ namespace vulkan {
 			glm::mat4 jointMatrix[64]{};
 			float jointcount{ 0 };
 		} uniformBlock;
-
-	
 	};
+
+	struct Vulkan_Mesh {
+		std::vector<Mesh> offset;
+		std::string name;
+	};
+
 	struct Vulkan_Texture {
 		std::string				name;
 		VkSampler				sampler{ VK_NULL_HANDLE };
@@ -462,7 +466,7 @@ namespace vulkan {
 		Skin* skin;
 		int32_t skinIndex = -1;
 		std::vector<SceneNode*>children;
-		std::vector<Vulkan_Mesh*> mesh;
+		std::vector<Vulkan_SkinnedMesh*> mesh;
 
 	};
 	struct Vulkan_Material {
@@ -482,6 +486,26 @@ namespace vulkan {
 		uint32_t diffuseTexture =	-1;
 	};
 	struct VulkanRenderObject {
+
+		bool isVisiable = false;
+		std::string name;
+		VkDescriptorSet descriptorSets[MAX_FRAMES_IN_FLIGHT];
+		struct DescriptorSetLayouts {
+			VkDescriptorSetLayout matrices{ VK_NULL_HANDLE };
+			VkDescriptorSetLayout textures{ VK_NULL_HANDLE };
+		} descriptorSetLayouts;
+		std::vector<Vulkan_Mesh> meshes;
+		std::vector<Vulkan_Texture> textures;
+		std::vector<Vulkan_Material> materials;
+		std::unordered_map<int, int> textureIdMapping;
+
+		VkBuffer		vertexBuffer;
+		VkDeviceMemory	vertexmemory;
+
+		VkBuffer		indiceBuffer;
+		VkDeviceMemory	indicememory;
+	};
+	struct VulkanRenderScene {
 		std::string name;
 		VkPipeline pipeline;
 		VkPipelineLayout Pipelinelayout;
@@ -492,7 +516,7 @@ namespace vulkan {
 			VkDescriptorSetLayout textures{ VK_NULL_HANDLE };
 		} descriptorSetLayouts;
 		std::vector<SceneNode*> sceneGraph;
-		std::vector<Vulkan_Mesh*> meshes;
+		std::vector<Vulkan_SkinnedMesh*> meshes;
 		std::vector<Vulkan_Texture> textures;
 		std::vector<Vulkan_Material> materials;
 		uint32_t textureCount = 0;

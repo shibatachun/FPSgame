@@ -198,7 +198,7 @@ void vulkan::Buffer::destroy()
 	}
 }
 
-void vulkan::VulkanRenderObject::Draw(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
+void vulkan::VulkanRenderScene::Draw(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
 	VkDeviceSize offsets[1] = { 0 };
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
 	vkCmdBindIndexBuffer(commandBuffer, indiceBuffer, 0, VK_INDEX_TYPE_UINT32);
@@ -209,7 +209,7 @@ void vulkan::VulkanRenderObject::Draw(VkCommandBuffer commandBuffer, VkPipelineL
 
 }
 
-void vulkan::VulkanRenderObject::drawNode(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, SceneNode* node)
+void vulkan::VulkanRenderScene::drawNode(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, SceneNode* node)
 {
 	for (auto& mesh : node->mesh) {
 		if (mesh->offset.size() > 0) {

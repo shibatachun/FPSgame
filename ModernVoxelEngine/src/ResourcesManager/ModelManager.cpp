@@ -9,16 +9,19 @@ asset::ModelManager::ModelManager()
 {
 	loadAllModel();
 	loadAllImage();
-	loadImage("test","res/textures/text_texture.jpg");
-	loadImage("viking", "res/textures/viking_room.png");
+	createDummyTexture();
+	//loadImage("test","res/textures/text_texture.jpg");
+	//loadImage("viking", "res/textures/viking_room.png");
 	//loadTestExample();
-	loadobj("res/models/viking_room.obj");
+	//loadobj("res/models/viking_room.obj");
 	//loadgltf("res/models/Zzz/zzz_alice/alice.pmx");
 	//loadgltf("res/models/sponza/sponza.gltf");
-	loadgltf_test("Sponza","res/models/sponza/sponza.gltf");
-	loadgltf_test("sky","res/models/sphere.gltf");
-	loadImage("sky", "res/textures/skysphere_rgba.ktx", true);
+	//loadgltf_test("Sponza","res/models/sponza/sponza.gltf");
+	//loadgltf_test("sky","res/models/sphere.gltf");
+	//loadImage("sky", "res/textures/skysphere_rgba.ktx", true);
 	//CollectTexturePaths("res/models/sponza/sponza.gltf");
+	//loadFBX("res/models/main_sponza/NewSponza_Main_Yup_003.fbx");
+	loadFBX("res/models/generator_LP.fbx");
 }
 
 asset::ModelManager::~ModelManager()
@@ -207,140 +210,239 @@ void asset::ModelManager::loadobj(std::string filePath)
 //TODO
 void asset::ModelManager::loadgltf(std::string filename)
 {                     
-	//ModelData data;
-	//Assimp::Importer importer;
-	//const aiScene* scene = importer.ReadFile(filename,
-	//	aiProcess_Triangulate |            // 和 tinyobj 的自动三角化等价
-	//	aiProcess_JoinIdenticalVertices |  // 合并完全相同的顶点
-	//	aiProcess_GenSmoothNormals |       // 如无法线则生成
-	//	aiProcess_CalcTangentSpace |       // 如需要切线
-	//	aiProcess_ImproveCacheLocality |
-	//	aiProcess_FlipUVs |
-	//	aiProcess_SortByPType);
-
-	//if (!scene) {
-	//	std::cout << "LoadAndExportCustomFormat() failed to loaded model" << filename << "\n";
-	//	std::cerr << "Assimp Error: " << importer.GetErrorString() << "\n";
-	//	return;
-	//}
-
-	//// glTF2 常用贴图类型（注意：LIGHTMAP 在 assimp 里对应 glTF 的 occlusion）
-	//static const aiTextureType kTypes[] = {
-	//	aiTextureType_BASE_COLOR,
-	//	aiTextureType_NORMALS,
-	//	aiTextureType_METALNESS,
-	//	aiTextureType_DIFFUSE_ROUGHNESS,
-	//	aiTextureType_LIGHTMAP,   // occlusion
-	//	aiTextureType_EMISSIVE,
-	//	aiTextureType_AMBIENT_OCCLUSION,
-	//	aiTextureType_GLTF_METALLIC_ROUGHNESS,
-	//	
-	//};
-
-	//std::unordered_set<std::string> dedup_textures;
-	//data.meshCount = scene->mNumMeshes;
-	//data.meshes.resize(data.meshCount);
-	//for (uint32_t i = 0; i < scene->mNumMeshes; i++) {
-	//	const aiMesh* meshdata = scene->mMeshes[i];
-	//	MeshData& mesh = data.meshes[i];
-	//	mesh.aabbMin = glm::vec3(std::numeric_limits<float>::max());
-	//	mesh.aabbMax = glm::vec3(-std::numeric_limits<float>::max());
-	//	mesh.vertexCount = meshdata->mNumVertices;
-	//	mesh.indexCount = meshdata->mNumFaces * 3;
-
-	//	
-	//}
-	//
-	//data.materialCount = scene->mNumMaterials;
-	//data.materials.resize(data.materialCount);
-	//for (uint32_t i = 0; i < data.materialCount; i++) {
-	//	aiMaterial* material = scene->mMaterials[i];
-	//	Material& mat = data.materials[i];
-	//	aiColor4D base = { 1,1,1,1 };
-	//	float roughness = 1.0f;
-	//	float metallic = 1.0f;
-	//	//获得Base color factor
-	//	if (material->Get(AI_MATKEY_BASE_COLOR, base) == AI_SUCCESS) mat.baseColorFactor = {base.r, base.g, base.b, base.a};
-	//	//获得Roughness factor
-	//	if (material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness) == AI_SUCCESS) mat.roughnessFactor = roughness;
-	//	//获得Metallic factor
-	//	if (material->Get(AI_MATKEY_METALLIC_FACTOR, metallic) == AI_SUCCESS) mat.matallicFactor = metallic = 1.0f;
-	//	;
-
-	//	{
-	//		aiString s;
-	//		if (material->Get(AI_MATKEY_GLTF_ALPHAMODE, s) == AI_SUCCESS) {
-	//			if (s.C_Str() == "BLEND") {
-	//				mat.alphaMode = Material::ALPHAMODE_BLEND;
-	//			}
-	//			if (s.C_Str() == "MASK") {
-	//				mat.alphaMode = Material::ALPHAMODE_MASK;
-	//			}
-	//		}
-	//	}
-	//	material->Get(AI_MATKEY_GLTF_ALPHACUTOFF, mat.alphaCutoff);
-
-	//	for (aiTextureType texture_type: kTypes) {
-	//
-	//		aiString p;
-	//		//TODO，这里可以获取更多的信息
-	//		if (material->GetTexture(texture_type, 0, &p) != AI_SUCCESS) {
-	//			continue;
-	//		}
-	//		
-	//		const char* s = p.C_Str();
-	//		
-	//		if (!s || !*s) continue;
-	//		if (s[0] == '*') continue; // 内嵌纹理，既然你只要路径，这里直接跳过
-
-	//		switch (texture_type)
-	//		{
-	//		case	aiTextureType_BASE_COLOR:
-	//			mat.baseColorTexture = std::string(s);
-	//			break;
-	//		case	aiTextureType_NORMALS:
-	//			mat.normalTexture = std::string(s);
-	//			break;
-	//		case	aiTextureType_GLTF_METALLIC_ROUGHNESS:
-	//			mat.matallicRoughnessTexture = std::string(s);
-	//			break;
-	//		case	aiTextureType_DIFFUSE:
-	//			mat.diffuseTexture = std::string(s);
-	//			break;	
-	//		case	aiTextureType_EMISSIVE:
-	//			mat.emissiveTexture = std::string(s);
-	//			break;
-	//		case	aiTextureType_SPECULAR:
-	//			mat.specularGlossinessTexture = std::string(s);
-	//			break;
-	//		case	aiTextureType_AMBIENT_OCCLUSION:
-	//			mat.occlusionTexture = std::string(s);
-	//		default:
-	//			break;
-	//		}
-	//		dedup_textures.insert(s);
-	//			
-	//		
-	//	}
-	//}
-
-	//for (const auto& texture_name : dedup_textures) {
-	//	//在目录下所有的texture file中储存对应的信息
-	//	bool isktx = false;
-	//	auto& tx = utils::findInMap(_imageFilesInfo,texture_name);
-	//	if (tx.ext == "ktx") {
-	//		isktx = true;
-
-	//	}
-	//	//加载image
-	//	loadImage(tx.name,tx.path,isktx);
-	//}
+	
 
 }
 
 void asset::ModelManager::loadNode(aiNode* scene, std::vector<Vertex>& vertexbuffer, std::vector<uint32_t>& indicebuffer)
 {
 	
+}
+
+
+void PrintTexture(const aiMaterial* mat, aiTextureType type, const char* typeName)
+{
+	unsigned int texCount = mat->GetTextureCount(type);
+	if (texCount == 0) return;
+
+	std::cout << "  " << typeName << " (" << texCount << "):\n";
+
+	for (unsigned int i = 0; i < texCount; i++) {
+		aiString path;
+		if (mat->GetTexture(type, i, &path) == AI_SUCCESS) {
+			std::cout << "     [" << i << "] " << path.C_Str() << "\n";
+		}
+	}
+}
+
+void PrintMaterialInfo(const aiScene* scene)
+{
+	if (!scene) {
+		std::cout << "Scene is null.\n";
+		return;
+	}
+
+	std::cout << "================ MATERIAL INFO ================\n";
+	std::cout << "Material Count: " << scene->mNumMaterials << "\n\n";
+
+	for (unsigned int i = 0; i < scene->mNumMaterials; i++)
+	{
+		aiMaterial* mat = scene->mMaterials[i];
+
+		aiString matName;
+		mat->Get(AI_MATKEY_NAME, matName);
+
+		std::cout << "------------------------------------------------\n";
+		std::cout << "Material #" << i << ": " << matName.C_Str() << "\n";
+
+		// ----- Print basic colors -----
+		aiColor4D baseColor;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_BASE_COLOR, baseColor))
+			std::cout << "  BaseColorFactor: (" << baseColor.r << ", " << baseColor.g << ", " << baseColor.b << ", " << baseColor.a << ")\n";
+
+		aiColor3D diffuse;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse))
+			std::cout << "  DiffuseColor: (" << diffuse.r << ", " << diffuse.g << ", " << diffuse.b << ")\n";
+
+		aiColor3D specular;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_SPECULAR, specular))
+			std::cout << "  SpecularColor: (" << specular.r << ", " << specular.g << ", " << specular.b << ")\n";
+
+		aiColor3D emissive;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_EMISSIVE, emissive))
+			std::cout << "  EmissiveColor: (" << emissive.r << ", " << emissive.g << ", " << emissive.b << ")\n";
+
+		float opacity;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_OPACITY, opacity))
+			std::cout << "  Opacity: " << opacity << "\n";
+
+		float metallic;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_METALLIC_FACTOR, metallic))
+			std::cout << "  MetallicFactor: " << metallic << "\n";
+
+		float roughness;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness))
+			std::cout << "  RoughnessFactor: " << roughness << "\n";
+
+		float glossiness;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_GLOSSINESS_FACTOR, glossiness))
+			std::cout << "  GlossinessFactor: " << glossiness << "\n";
+
+		// ----- Print all texture types -----
+
+		PrintTexture(mat, aiTextureType_DIFFUSE, "DiffuseTexture");
+		PrintTexture(mat, aiTextureType_BASE_COLOR, "BaseColorTexture");
+		PrintTexture(mat, aiTextureType_NORMALS, "NormalTexture");
+		PrintTexture(mat, aiTextureType_METALNESS, "MetallicTexture");
+		PrintTexture(mat, aiTextureType_DIFFUSE_ROUGHNESS, "RoughnessTexture");
+		PrintTexture(mat, aiTextureType_AMBIENT_OCCLUSION, "OcclusionTexture");
+		PrintTexture(mat, aiTextureType_EMISSIVE, "EmissiveTexture");
+		PrintTexture(mat, aiTextureType_OPACITY, "OpacityTexture");
+
+		// PBR MetallicRoughness (glTF / FBX)
+		PrintTexture(mat, aiTextureType_UNKNOWN, "UNKNOWNTexture (MetalRough / Extras)");
+
+		// SpecularGlossiness workflow
+		PrintTexture(mat, aiTextureType_SPECULAR, "SpecularTexture");
+		PrintTexture(mat, aiTextureType_SHININESS, "GlossinessTexture");
+
+		std::cout << "\n";
+	}
+
+	std::cout << "================================================\n";
+}
+
+void asset::ModelManager::loadFBX(std::string filepath)
+{
+	ModelData modelData;
+	Assimp::Importer importer;
+	importer.SetPropertyBool(AI_CONFIG_PP_FD_REMOVE, true);
+	const aiScene* scene = importer.ReadFile(filepath,
+		aiProcess_Triangulate |
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_ImproveCacheLocality |
+		aiProcess_RemoveRedundantMaterials |
+		aiProcess_FlipUVs);
+	if (!scene) {
+		std::cout << "LoadAndExportCustomFormat() failed to loaded model " << filepath << "\n";
+		std::cerr << "Assimp Error: " << importer.GetErrorString() << "\n";
+		return;
+	}
+	modelData.name = GetFileName(filepath);
+	modelData.meshCount = scene->mNumMeshes;
+	modelData.timestamp = GetLastModifiedTime(filepath);
+	modelData.materials.resize(scene->mNumMaterials);
+	modelData.meshdatas.resize(scene->mNumMeshes);
+	for (int i = 0; i < modelData.meshCount; i++) {
+		MeshData& meshData = modelData.meshdatas[i];
+		//TODO: Determine the lods
+		Mesh mesh;
+		mesh.vertexCount = scene->mMeshes[i]->mNumVertices;
+		mesh.indiceCount = scene->mMeshes[i]->mNumFaces * 3;
+		mesh.materialID = scene->mMeshes[i]->mMaterialIndex;
+		mesh.name = scene->mMeshes[i]->mName.C_Str();
+		mesh.vertexOffset += modelData.vertexSize;
+		mesh.indexOffset += modelData.indiceSize;
+		modelData.vertexSize += mesh.vertexCount;
+		modelData.indiceSize += mesh.indiceCount;
+		meshData.meshes.push_back(mesh);
+	}
+	modelData.vertices.resize(modelData.vertexSize);
+	modelData.indices.resize(modelData.indiceSize);
+	
+	for (int i = 0; i < modelData.meshCount; i++) {
+		MeshData& meshData = modelData.meshdatas[i];
+		uint32_t vertice_offset = meshData.meshes[0].vertexOffset;
+		uint32_t indices_offset = meshData.meshes[0].indexOffset;
+		const aiMesh* assimpMesh = scene->mMeshes[i];
+
+		for (unsigned int j = 0; j < assimpMesh->mNumVertices; j++) {
+			Vertex& ver = modelData.vertices[vertice_offset+j];
+			ver.pos = glm::vec3(assimpMesh->mVertices[j].x, assimpMesh->mVertices[j].y, assimpMesh->mVertices[j].z);
+			ver.normal = glm::vec3(assimpMesh->mNormals[j].x, assimpMesh->mNormals[j].y, assimpMesh->mNormals[j].z);
+			ver.uv = assimpMesh->HasTextureCoords(0) ? glm::vec2(assimpMesh->mTextureCoords[0][j].x, assimpMesh->mTextureCoords[0][j].y) : glm::vec2(0.0f, 0.0f);
+			ver.color = assimpMesh->HasVertexColors(0) ? glm::vec4(assimpMesh->mColors[0]->r, assimpMesh->mColors[0]->g, assimpMesh->mColors[0]->b, assimpMesh->mColors[0]->a) : glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+			ver.tangent = assimpMesh->HasTangentsAndBitangents() ? glm::vec4(assimpMesh->mTangents[j].x, assimpMesh->mTangents[j].y, assimpMesh->mTangents[j].z, 0.0f) : glm::vec4(0.0f);
+			ver.normal = glm::normalize(ver.normal);
+			meshData.aabbMin = utils::math::VecMin(ver.pos, meshData.aabbMin);
+			meshData.aabbMax = utils::math::VecMax(ver.pos, meshData.aabbMax);
+		}
+		for (unsigned int j = 0; j < assimpMesh->mNumFaces; j++) {
+			const aiFace& face = assimpMesh->mFaces[j];
+			unsigned int baseIndex = j * 3;
+			modelData.indices[indices_offset + baseIndex] = face.mIndices[0];
+			modelData.indices[indices_offset + baseIndex + 1] = face.mIndices[1];
+			modelData.indices[indices_offset + baseIndex + 2] = face.mIndices[2];
+		}
+		for (int i = 0; i < meshData.meshes[0].indiceCount; i +=3) {
+			Vertex& vert0 = modelData.vertices[vertice_offset + modelData.indices[indices_offset + i]];
+			Vertex& vert1 = modelData.vertices[vertice_offset + modelData.indices[indices_offset + i+1]];
+			Vertex& vert2 = modelData.vertices[vertice_offset + modelData.indices[indices_offset + i+2]];
+			glm::vec3 deltaPos1 = vert1.pos - vert0.pos;
+			glm::vec3 deltaPos2 = vert2.pos - vert0.pos;
+			glm::vec2 deltaUV1 = vert1.uv - vert0.uv;
+			glm::vec2 deltaUV2 = vert2.uv - vert0.uv;
+			float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+			glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+			glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
+			vert0.tangent = glm::vec4(tangent, 0.0f);
+			vert1.tangent = glm::vec4(tangent, 0.0f);
+			vert2.tangent = glm::vec4(tangent, 0.0f);
+		}
+		modelData.aabbMin = utils::math::VecMin(modelData.aabbMin, meshData.aabbMin);
+		modelData.aabbMax = utils::math::VecMax(modelData.aabbMax, meshData.aabbMax);
+
+	}
+
+
+	_models.push_back(modelData);
+	_modelsCount++;
+
+}
+
+void asset::ModelManager::processFBXNode(const aiNode * node, int depth)
+{
+	if (!node) return;
+
+	// 缩进打印层级
+	for (int i = 0; i < depth; i++)
+		printf("  ");
+
+	// 打印 node 名字
+	printf("%s\n", node->mName.C_Str());
+
+	// 递归子节点
+	for (unsigned i = 0; i < node->mNumChildren; i++)
+	{
+		processFBXNode(node->mChildren[i], depth + 1);
+	}
+}
+
+void asset::ModelManager::createDummyTexture()
+{
+	Image image;
+	image.id = _imageCount;
+	image.format = TextureFormat::RGBA8_UNORM;
+	image.mipLevels = 1;
+	uint8_t pixel[4] = { 255,255,255,255 };
+	image.size = sizeof(pixel);
+	image.pixel = new unsigned char[4];
+	memcpy(image.pixel, pixel, sizeof(pixel));
+	SubResource sub;
+	sub.depth = 1;
+	sub.height = 1;
+	sub.width = 1;
+	sub.mip = 0;
+	sub.layer = 0;
+	sub.offset = 0;
+	image.subresource.push_back(sub);
+	
+	_imageFileIdMapping.emplace("dummy", _imageCount);
+	_imageFile.push_back(image);
+	_imageCount++;
+	
+
+
 }
 
  

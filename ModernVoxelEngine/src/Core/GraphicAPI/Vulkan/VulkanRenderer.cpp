@@ -321,7 +321,7 @@ void vulkan::VulkanRenderer::CreateCommandBuffer(QueueFamily family)
 	Check(vkAllocateCommandBuffers(_devices->Handle(), &allocaInfo, _commandBuffers.data()), "Allocate Command buffer!");
 }
 
-void vulkan::VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, VulkanRenderObject object)
+void vulkan::VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, VulkanRenderScene object)
 {
 	
 	VkCommandBufferBeginInfo beginInfo{};
@@ -451,7 +451,7 @@ void vulkan::VulkanRenderer::CreateUniformBuffers()
 
 
 
-void vulkan::VulkanRenderer::ConfigureDescriptorSet(VulkanRenderObject& object)
+void vulkan::VulkanRenderer::ConfigureDescriptorSet(VulkanRenderScene& object)
 {
 	if (object.descriptorSets.size() == MAX_FRAMES_IN_FLIGHT) {
 		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -474,7 +474,16 @@ void vulkan::VulkanRenderer::ConfigureDescriptorSet(VulkanRenderObject& object)
 	
 }
 
-void vulkan::VulkanRenderer::ConfigurePipeline(VulkanRenderObject& object)
+void vulkan::VulkanRenderer::ConfigureDescriptorSet(VulkanRenderObject & object)
+{
+	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		utils::vector<VkDescriptorBufferInfo> descriptors = { _uniformData[i].buffer.descriptor };
+		_descriptorPools->AllocateDescriptorSet(object.descriptorSetLayouts.matrices, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, object.descriptorSets[i], 0, descriptors, i);
+	}
+	
+}
+
+void vulkan::VulkanRenderer::ConfigurePipeline(VulkanRenderScene& object)
 {
 	std::vector<VkDescriptorSetLayout> setLayouts = { object.descriptorSetLayouts.matrices, object.descriptorSetLayouts.textures };
 	VkPipelineLayoutCreateInfo pipelineLayoutCI = initializers::pipelineLayoutCreateInfo(setLayouts.data(), static_cast<uint32_t>(setLayouts.size()));
@@ -568,20 +577,31 @@ bool vulkan::VulkanRenderer::IsMinimized() const
 	return width==0 && height==0;
 }
 
-void vulkan::VulkanRenderer::PrepareRenderObject()
+void vulkan::VulkanRenderer::PrepareRenderScene()
 {
-	
-	//_resouceManager->ConstructVulkanRenderObject("viking",
-	//	"viking_room", { "viking" });
-	_resouceManager->ConstructVulkanRenderObject("Sponza",
-		"Sponza");
-
-	for (auto& x : _resouceManager->GetRenderObjects()) {
+	/*_resouceManager->ConstructVulkanRenderObject("Sponza",
+		"Sponza");*/
+	for (auto& x : _resouceManager->GetRenderScene()) {
 		ConfigureDescriptorSet(x);
 		ConfigurePipeline(x);
 		_renderObjects.push_back(x);
 	}
 	std::cout << "stop PrepareRenderObject" << std::endl;
+}
+
+void vulkan::VulkanRenderer::PrepareRenderObject()
+{
+	
+	//_resouceManager->ConstructVulkanRenderObject("viking",
+	//	"viking_room", { "viking" });
+	
+	_resouceManager->ConstructVulkanRenderObject("generator", "generator");
+	for (auto& x : _resouceManager->GetRenderObjects()) {
+		
+	}
+
+	
+
 }
 
 void vulkan::VulkanRenderer::BuildCommandBuffer()

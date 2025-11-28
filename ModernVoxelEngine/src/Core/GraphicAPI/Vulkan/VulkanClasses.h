@@ -453,9 +453,12 @@ namespace vulkan {
 			void ConvertToVulkanResource();
 			void ConstructVulkanRenderObject(std::string name, std::string raw_model_name, std::vector<std::string> textureFiles);
 			void ConstructVulkanRenderObject(std::string name, std::string raw_model_name);
-			VulkanRenderObject& GetRenderObject(std::string name);
+			void CreateDebugRenderObject(std::string name, std::string raw_model_name, std::vector<std::string> textureFiles);
+			void CreateDummyTexture();
+			VulkanRenderScene& GetRenderObject(std::string name);
+			std::vector<VulkanRenderObject>& GetRenderObjects(){ return _renderObjects; }
 			VkPipelineShaderStageCreateInfo LoadShader(std::string shader_name, VkShaderStageFlagBits);
-			std::vector<VulkanRenderObject>& GetRenderObjects() { return _renderObjects; };
+			std::vector<VulkanRenderScene>& GetRenderScene() { return _renderScenes; };
 
 
 		private:
@@ -472,6 +475,7 @@ namespace vulkan {
 			std::vector<Vulkan_Mesh>															_mesh;
 			std::vector<Vulkan_Material>														_material;
 			std::vector<Vulkan_Texture>															_Texture;
+			std::vector<VulkanRenderScene>														_renderScenes;
 			std::vector<VulkanRenderObject>														_renderObjects;
 
 			//GPU Resources
@@ -491,6 +495,8 @@ namespace vulkan {
 			ResourcePool<Program>          programs;
 			ResourcePool<Material>         materials;
 
+			Vulkan_Texture																		_dummy_texture;
+
 
 		
 		private:
@@ -499,11 +505,13 @@ namespace vulkan {
 			PipelineHandle CreatePipeline(const PipelineCreation&);
 			SamplerHandle CreateSamplerResource (const SamplerCreation& creation);
 
-	
+		
 			void ConstructVulkanRenderObject();
+		
 			void prepareNodeDescriptor(Node* node, VkDescriptorSetLayout descriptorSetLayout);
 			void CreateTextureImageView(VkImageView& imageview, VkImage image);
-			void ConstructSceneNode(SceneNode* parent, Node* sourceNode, VulkanRenderObject& object, ModelData& modelData); 
+			void ConstructSceneNode(SceneNode* parent, Node* sourceNode, VulkanRenderScene& object, ModelData& modelData);
+			
 
 	
 	};

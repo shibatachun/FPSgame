@@ -16,8 +16,6 @@ struct Vertex {
     glm::vec4 joint0{};
     glm::vec4 weight0{};
     glm::vec4 tangent{};
-  
-    
 };
 
 struct Node;
@@ -111,6 +109,7 @@ struct Image {
     std::vector<SubResource> subresource;
 
 };
+
 enum AlphaMode { ALPHAMODE_OPAQUE, ALPHAMODE_MASK, ALPHAMODE_BLEND };
 
 enum DescriptorBindingFlags {
@@ -165,8 +164,6 @@ inline TextureFormat FromVk(VkFormat f) {
     return TextureFormat::UNKNOWN;
 }
 
-
-
 //Skin 蒙皮？
 struct Skin {
     std::string name;
@@ -218,7 +215,6 @@ struct Animation
     float                         currentTime = 0.0f;
 };
 
-
 //模型数据
 struct ModelData {
     uint32_t id;
@@ -240,4 +236,9 @@ struct ModelData {
     std::vector<Node*> nodes;
     glm::vec3 aabbMin = glm::vec3(std::numeric_limits<float>::max());
     glm::vec3 aabbMax = glm::vec3(-std::numeric_limits<float>::max());
+};
+
+struct Scene {
+    std::vector<Node*> linearNodeHierarchy;
+    std::vector<Node*> nodes;
 };
