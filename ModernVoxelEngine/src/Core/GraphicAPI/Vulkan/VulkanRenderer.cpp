@@ -480,6 +480,9 @@ void vulkan::VulkanRenderer::ConfigureDescriptorSet(VulkanRenderObject & object)
 		utils::vector<VkDescriptorBufferInfo> descriptors = { _uniformData[i].buffer.descriptor };
 		_descriptorPools->AllocateDescriptorSet(object.descriptorSetLayouts.matrices, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, object.descriptorSets[i], 0, descriptors, i);
 	}
+	for (auto& material : object.materials) {
+		_descriptorPools->AllocateImageDescriptorSet(material, object.textures, object.descriptorSetLayouts.textures);
+	}
 	
 }
 
@@ -597,7 +600,8 @@ void vulkan::VulkanRenderer::PrepareRenderObject()
 	
 	_resouceManager->ConstructVulkanRenderObject("generator", "generator");
 	for (auto& x : _resouceManager->GetRenderObjects()) {
-		
+		ConfigureDescriptorSet(x);
+
 	}
 
 	

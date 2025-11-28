@@ -2270,6 +2270,7 @@ void vulkan::VulkanResouceManager::ConstructVulkanRenderObject(std::string name,
 	VulkanRenderScene renderObject;
 
 	renderObject.name = name;
+
 	//生成VKmesh
 	for (const auto& x : modeldata.linearNodeHierarchy) {
 		
@@ -2296,11 +2297,14 @@ void vulkan::VulkanResouceManager::ConstructVulkanRenderObject(std::string name,
 		
 
 	}
+
 	//生成VkSceneNode
 	for (const auto& x : modeldata.nodes)
 	{
 		ConstructSceneNode(nullptr, x, renderObject, modeldata);
 	}
+
+
 	//生成VkImage
 	for (const auto& x : modeldata.images) {
 		const Image& image = _assetMnanger.getImageDataByName(x);
@@ -2320,6 +2324,7 @@ void vulkan::VulkanResouceManager::ConstructVulkanRenderObject(std::string name,
 		renderObject.textureCount++;
 
 	}
+
 	//生成DescriptorPool
 	{
 		_descriptorPoolManager.CreatePoolForIndividualObject(1, modeldata.imageCount + 1, name);
@@ -2336,10 +2341,14 @@ void vulkan::VulkanResouceManager::ConstructVulkanRenderObject(std::string name,
 		creation.size = static_cast<uint32_t>(modeldata.vertices.size());
 
 	}
+
+
 	//生成DescriptorPool
 	{
 		_descriptorPoolManager.CreatePoolForIndividualObject(1, modeldata.imageCount + 1, name);
 	}
+
+
 	//生成vertex shader的关于矩阵变换的layout
 	{
 		LayoutConfig configVertex{};
@@ -2412,6 +2421,8 @@ void vulkan::VulkanResouceManager::CreateDebugRenderObject(std::string name, std
 	_renderObjects.push_back(object);
 	Vulkan_Material material;
 	material.baseColorTexture = 0;
+	object.textures.push_back(_dummy_texture);
+	object.materials.push_back(material);
 
 
 	
