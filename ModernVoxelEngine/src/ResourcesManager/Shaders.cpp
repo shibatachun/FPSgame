@@ -12,6 +12,7 @@ asset::ShadersManager::ShadersManager(std::string dir) :
 	ConstructShader("grid", "grid_vert", "grid_frag");
 	ConstructShader("sky", "triangle_vert", "sky_frag");
 	ConstructShader("pbr", "pbr_vert", "pbr_frag");
+	ConstructShader("debug", "debug_vert", "debug_frag");
 }
 
 asset::ShadersManager::~ShadersManager(){

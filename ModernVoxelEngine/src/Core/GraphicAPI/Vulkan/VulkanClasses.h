@@ -425,10 +425,10 @@ namespace vulkan {
 			return _test_pool[poolname];
 		}
 		std::vector<VkDescriptorSet> GetHardCodedDescriptorSet() { return _hardCodeDescriptorSet; };
+		std::vector<VkDescriptorPool>											_PerFramePool;
 
 	private:
 		VkDescriptorPool														_GlobalPool;
-		std::vector<VkDescriptorPool>											_PerFramePool;
 		std::vector<VkDescriptorSet>											_hardCodeDescriptorSet;
 		std::unordered_map<VkDescriptorSetLayout, std::vector<VkDescriptorSet>> _descriptorSetCache;
 		std::unordered_map<std::string, VkDescriptorPool>						_test_pool;
@@ -453,7 +453,7 @@ namespace vulkan {
 			void ConvertToVulkanResource();
 			void ConstructVulkanRenderObject(std::string name, std::string raw_model_name, std::vector<std::string> textureFiles);
 			void ConstructVulkanRenderObject(std::string name, std::string raw_model_name);
-			void CreateDebugRenderObject(std::string name, std::string raw_model_name, std::vector<std::string> textureFiles);
+			void CreateDebugRenderObject(std::string name, std::string raw_model_name);
 			void CreateDummyTexture();
 			VulkanRenderScene& GetRenderObject(std::string name);
 			std::vector<VulkanRenderObject>& GetRenderObjects(){ return _renderObjects; }

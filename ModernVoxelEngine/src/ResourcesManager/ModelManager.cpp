@@ -20,8 +20,11 @@ asset::ModelManager::ModelManager()
 	//loadgltf_test("sky","res/models/sphere.gltf");
 	//loadImage("sky", "res/textures/skysphere_rgba.ktx", true);
 	//CollectTexturePaths("res/models/sponza/sponza.gltf");
-	//loadFBX("res/models/main_sponza/NewSponza_Main_Yup_003.fbx");
-	loadFBX("res/models/generator_LP.fbx");
+	//loadFBX("Sponza","res/models/main_sponza/NewSponza_Main_Zup_003.fbx");
+	//loadFBX("generator","res/models/generator.fbx");
+	//loadFBX("door","res/models/door.fbx");
+	//loadFBX("piano","res/models/piano.fbx");
+	loadFBX("Capoeira", "res/models/HandWithGloves.fbx");
 }
 
 asset::ModelManager::~ModelManager()
@@ -312,7 +315,7 @@ void PrintMaterialInfo(const aiScene* scene)
 	std::cout << "================================================\n";
 }
 
-void asset::ModelManager::loadFBX(std::string filepath)
+void asset::ModelManager::loadFBX(std::string model_name, std::string filepath)
 {
 	ModelData modelData;
 	Assimp::Importer importer;
@@ -322,6 +325,7 @@ void asset::ModelManager::loadFBX(std::string filepath)
 		aiProcess_JoinIdenticalVertices |
 		aiProcess_ImproveCacheLocality |
 		aiProcess_RemoveRedundantMaterials |
+		aiProcess_PreTransformVertices|
 		aiProcess_FlipUVs);
 	if (!scene) {
 		std::cout << "LoadAndExportCustomFormat() failed to loaded model " << filepath << "\n";
@@ -333,10 +337,12 @@ void asset::ModelManager::loadFBX(std::string filepath)
 	modelData.timestamp = GetLastModifiedTime(filepath);
 	modelData.materials.resize(scene->mNumMaterials);
 	modelData.meshdatas.resize(scene->mNumMeshes);
+	float scale = 0.01f;
+
 	for (int i = 0; i < modelData.meshCount; i++) {
 		MeshData& meshData = modelData.meshdatas[i];
 		//TODO: Determine the lods
-		Mesh mesh;
+		Mesh mesh{};
 		mesh.vertexCount = scene->mMeshes[i]->mNumVertices;
 		mesh.indiceCount = scene->mMeshes[i]->mNumFaces * 3;
 		mesh.materialID = scene->mMeshes[i]->mMaterialIndex;
@@ -358,7 +364,7 @@ void asset::ModelManager::loadFBX(std::string filepath)
 
 		for (unsigned int j = 0; j < assimpMesh->mNumVertices; j++) {
 			Vertex& ver = modelData.vertices[vertice_offset+j];
-			ver.pos = glm::vec3(assimpMesh->mVertices[j].x, assimpMesh->mVertices[j].y, assimpMesh->mVertices[j].z);
+			ver.pos = glm::vec3(assimpMesh->mVertices[j].x, -assimpMesh->mVertices[j].y, assimpMesh->mVertices[j].z) * scale;
 			ver.normal = glm::vec3(assimpMesh->mNormals[j].x, assimpMesh->mNormals[j].y, assimpMesh->mNormals[j].z);
 			ver.uv = assimpMesh->HasTextureCoords(0) ? glm::vec2(assimpMesh->mTextureCoords[0][j].x, assimpMesh->mTextureCoords[0][j].y) : glm::vec2(0.0f, 0.0f);
 			ver.color = assimpMesh->HasVertexColors(0) ? glm::vec4(assimpMesh->mColors[0]->r, assimpMesh->mColors[0]->g, assimpMesh->mColors[0]->b, assimpMesh->mColors[0]->a) : glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -370,11 +376,11 @@ void asset::ModelManager::loadFBX(std::string filepath)
 		for (unsigned int j = 0; j < assimpMesh->mNumFaces; j++) {
 			const aiFace& face = assimpMesh->mFaces[j];
 			unsigned int baseIndex = j * 3;
-			modelData.indices[indices_offset + baseIndex] = face.mIndices[0];
-			modelData.indices[indices_offset + baseIndex + 1] = face.mIndices[1];
-			modelData.indices[indices_offset + baseIndex + 2] = face.mIndices[2];
+			modelData.indices[indices_offset + baseIndex] = face.mIndices[0] + vertice_offset;
+			modelData.indices[indices_offset + baseIndex + 1] = face.mIndices[1] + vertice_offset;
+			modelData.indices[indices_offset + baseIndex + 2] = face.mIndices[2] + vertice_offset;
 		}
-		for (int i = 0; i < meshData.meshes[0].indiceCount; i +=3) {
+		/*for (int i = 0; i < meshData.meshes[0].indiceCount; i +=3) {
 			Vertex& vert0 = modelData.vertices[vertice_offset + modelData.indices[indices_offset + i]];
 			Vertex& vert1 = modelData.vertices[vertice_offset + modelData.indices[indices_offset + i+1]];
 			Vertex& vert2 = modelData.vertices[vertice_offset + modelData.indices[indices_offset + i+2]];
@@ -388,13 +394,14 @@ void asset::ModelManager::loadFBX(std::string filepath)
 			vert0.tangent = glm::vec4(tangent, 0.0f);
 			vert1.tangent = glm::vec4(tangent, 0.0f);
 			vert2.tangent = glm::vec4(tangent, 0.0f);
-		}
+		}*/
 		modelData.aabbMin = utils::math::VecMin(modelData.aabbMin, meshData.aabbMin);
 		modelData.aabbMax = utils::math::VecMax(modelData.aabbMax, meshData.aabbMax);
 
 	}
 
 
+	_modelsIdMapping.emplace(model_name, _modelsCount);
 	_models.push_back(modelData);
 	_modelsCount++;
 
@@ -424,10 +431,14 @@ void asset::ModelManager::createDummyTexture()
 	image.id = _imageCount;
 	image.format = TextureFormat::RGBA8_UNORM;
 	image.mipLevels = 1;
+	image.texDepth = 1;
+	image.texHeight = 1;
+	image.texWidth = 1;
 	uint8_t pixel[4] = { 255,255,255,255 };
 	image.size = sizeof(pixel);
 	image.pixel = new unsigned char[4];
 	memcpy(image.pixel, pixel, sizeof(pixel));
+
 	SubResource sub;
 	sub.depth = 1;
 	sub.height = 1;

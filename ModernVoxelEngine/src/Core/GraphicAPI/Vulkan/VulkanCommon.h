@@ -489,11 +489,13 @@ namespace vulkan {
 
 		bool isVisiable = false;
 		std::string name;
-		VkDescriptorSet descriptorSets[MAX_FRAMES_IN_FLIGHT];
+		utils::vector<VkDescriptorSet> descriptorSets;
 		struct DescriptorSetLayouts {
 			VkDescriptorSetLayout matrices{ VK_NULL_HANDLE };
-			VkDescriptorSetLayout textures{ VK_NULL_HANDLE };
 		} descriptorSetLayouts;
+		VkPipelineLayout pipeline_layout;
+		VkPipeline pipeline;
+		VkPipeline line_pipeline;
 		std::vector<Vulkan_Mesh> meshes;
 		std::vector<Vulkan_Texture> textures;
 		std::vector<Vulkan_Material> materials;

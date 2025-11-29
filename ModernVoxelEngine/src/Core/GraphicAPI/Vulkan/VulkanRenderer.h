@@ -112,7 +112,8 @@ namespace vulkan
 		glm::vec3												_sunDir;
 
 
-		std::vector<VulkanRenderScene>							_renderObjects;
+		std::vector<VulkanRenderScene>							_renderScenes;
+		std::vector<VulkanRenderObject>							_renderObjects;
 		
 	private:
 		bool InitVulkan();
@@ -129,6 +130,7 @@ namespace vulkan
 
 		void CreateFrameBuffer();
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, VulkanRenderScene object);
+		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, VulkanRenderObject object);
 		void CreateCommandBuffer(QueueFamily family);
 		void CreateSyncObjects();
 		void RecreateSwapChain();
@@ -136,6 +138,7 @@ namespace vulkan
 		void ConfigureDescriptorSet(VulkanRenderScene& scene);
 		void ConfigureDescriptorSet(VulkanRenderObject& object);
 		void ConfigurePipeline(VulkanRenderScene& object);
+		void ConfigureDebugObjectPipeline(VulkanRenderObject& object);
 		void UpdateUniformBuffer(uint32_t currentImage);
 		void UpdateSkyBuffer(uint32_t currentImage);
 		void UpdateGridBuffer(uint32_t currentImage);

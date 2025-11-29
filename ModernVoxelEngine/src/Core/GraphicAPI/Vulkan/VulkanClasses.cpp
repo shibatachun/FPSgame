@@ -1371,6 +1371,7 @@ VkDescriptorSetLayout vulkan::DescriptorLayoutManager::CreateDescriptorSetLayout
 {
 	auto it = _LayoutCache.find(config);
 	if (it == _LayoutCache.end()){
+		
 		VkDescriptorSetLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 		layoutInfo.bindingCount = config.bindingCounts;
@@ -1378,6 +1379,8 @@ VkDescriptorSetLayout vulkan::DescriptorLayoutManager::CreateDescriptorSetLayout
 		Check(vkCreateDescriptorSetLayout(_device.Handle(), &layoutInfo, nullptr, &_LayoutCache[config]),"Create DescriptorSetLayout");
 	}
 	return _LayoutCache[config];
+	
+	
 	
 }
 
@@ -2352,9 +2355,13 @@ void vulkan::VulkanResouceManager::ConstructVulkanRenderObject(std::string name,
 	//生成vertex shader的关于矩阵变换的layout
 	{
 		LayoutConfig configVertex{};
-		configVertex.bindings.push_back(initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<uint32_t>(configVertex.bindingCounts)));
+		configVertex.bindings.push_back(initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 
+			static_cast<uint32_t>(configVertex.bindingCounts)));
 		configVertex.UpdateAllArray();
-		configVertex.bindings.push_back(initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT ,static_cast<uint32_t>(configVertex.bindingCounts)));
+		configVertex.bindings.push_back(initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 
+			VK_SHADER_STAGE_FRAGMENT_BIT ,
+			static_cast<uint32_t>(configVertex.bindingCounts)));
 		configVertex.UpdateAllArray();
 		renderObject.descriptorSetLayouts.matrices = _descriptorLayoutManager.CreateDescriptorSetLayout(configVertex);
 		
@@ -2392,38 +2399,43 @@ void vulkan::VulkanResouceManager::ConstructVulkanRenderObject(std::string name,
 	_renderScenes.push_back(renderObject);
 }
 
-void vulkan::VulkanResouceManager::CreateDebugRenderObject(std::string name, std::string raw_model_name, std::vector<std::string> textureFiles)
+void vulkan::VulkanResouceManager::CreateDebugRenderObject(std::string name, std::string raw_model_name)
 {
 	ModelData modelData = _assetMnanger.getModelDataByName(raw_model_name);
 	VulkanRenderObject object;
+	object.name = modelData.name;
 	for (const auto& mesh : modelData.meshdatas) {
 		Vulkan_Mesh vk_mesh;
 		vk_mesh.name = mesh.name;
 		for (const auto& offset : mesh.meshes) {
 			vk_mesh.offset.push_back(offset);
 		}
+		object.meshes.push_back(vk_mesh);
 	}
+	object.descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 	{
-		LayoutConfig uboLayout;
-		uboLayout.bindings.push_back(initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, uboLayout.bindingCounts));
+		LayoutConfig uboLayout{};
+		uboLayout.bindings.push_back(initializers::descriptorSetLayoutBinding(
+			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | 
+			VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<uint32_t>(uboLayout.bindingCounts)));
 		uboLayout.UpdateAllArray();
 		object.descriptorSetLayouts.matrices = _descriptorLayoutManager.CreateDescriptorSetLayout(uboLayout);
+		
+		
 	}
-	{
-		LayoutConfig materialLayout;
-		materialLayout.bindings.push_back(initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, materialLayout.bindingCounts));
-	}
+
 	//TODO::material
 	{
 		_BufferManager.CreateVertexBuffer1(modelData.vertices, object.vertexBuffer, object.vertexmemory);
 		_BufferManager.CreateIndexBuffer1(modelData.indices, object.indiceBuffer, object.indicememory);
 	}
-	_renderObjects.push_back(object);
+	
 	Vulkan_Material material;
 	material.baseColorTexture = 0;
 	object.textures.push_back(_dummy_texture);
 	object.materials.push_back(material);
 
+	_renderObjects.push_back(object);
 
 	
 }

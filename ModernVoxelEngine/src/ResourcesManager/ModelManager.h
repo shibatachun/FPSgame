@@ -28,7 +28,7 @@ private:
 	void loadobj(std::string filePath);
 	void loadgltf(std::string filename);
 	void loadNode(aiNode* scene, std::vector<Vertex>& vertexbuffer, std::vector<uint32_t>& indicebuffer);
-	void loadFBX(std::string filepath);
+	void loadFBX(std::string model_name, std::string filepath);
 	void processFBXNode(const aiNode* node, int depth);
 	void createDummyTexture();
 	//test function
