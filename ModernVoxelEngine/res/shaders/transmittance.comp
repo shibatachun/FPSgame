@@ -1,0 +1,138 @@
+#version 460
+layout(local_size_x = 8, local_size_y = 8) in;
+
+// =============================================================================
+// OUTPUT: Transmittance LUT
+// =============================================================================
+
+layout(binding = 0, rgba16f) writeonly uniform image2D transmittanceLUT;
+
+// =============================================================================
+// Atmosphere Parameters
+// =============================================================================
+
+layout(std140, binding = 1) uniform AtmosphereUBO
+{
+    float Rg;               // ground radius
+    float Rt;               // top atmosphere radius
+    float HR;               // Rayleigh scale height
+    float HM;               // Mie scale height
+
+    vec3  betaR;            // Rayleigh coefficient
+    float _pad0;
+
+    vec3  betaM;            // Mie coefficient
+    float mieG;
+
+    vec3  sunDir;
+    float dummy0;
+};
+
+// =============================================================================
+// Utility
+// =============================================================================
+
+// Distance to sphere boundary (intersection)
+bool RaySphereIntersect(vec3 ro, vec3 rd, float radius, out float t)
+{
+    float b = dot(ro, rd);
+    float c = dot(ro, ro) - radius * radius;
+    float h = b * b - c;
+
+    if (h < 0.0)
+    {
+        t = 0.0;
+        return false;
+    }
+    t = -b + sqrt(h);
+    return (t >= 0.0);
+}
+
+// =============================================================================
+// LUT coordinate → physical parameters
+//   x → μ = cos(view zenith angle) ∈ [-1,1]
+//   y → height h from ground to top atmosphere
+// =============================================================================
+
+void GetParamsFromUV(ivec2 id, ivec2 size,
+                     out vec3 pos, out vec3 viewDir)
+{
+    float u = (float(id.x) + 0.5) / float(size.x);
+    float v = (float(id.y) + 0.5) / float(size.y);
+
+    float mu = mix(-1.0, 1.0, u); // cos(view angle)
+    float h  = mix(Rg, Rt, v);    // height
+
+    float sinTheta = sqrt(max(0.0, 1.0 - mu * mu));
+
+    // view direction (zenith-based)
+    viewDir = normalize(vec3(sinTheta, mu, 0.0));
+
+    // observer position
+    pos = vec3(0.0, h, 0.0);
+}
+
+// ============================================================================
+// Compute optical depth (OD) integral
+// OD = ∫ β * exp(-(h - Rg)/H) dt
+// Transmittance = exp(-OD)
+// ============================================================================
+
+float OpticalDepth(float h, float t, float H)
+{
+    return exp(-(h - Rg) / H) * t;
+}
+
+// ============================================================================
+// FULL transmittance integral
+// (Raymarch along ray, sum Rayleigh and Mie exponential falloff)
+// ============================================================================
+
+void main()
+{
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 size  = imageSize(transmittanceLUT);
+
+    if (coord.x >= size.x || coord.y >= size.y)
+        return;
+
+    // Convert LUT coords → physical parameters
+    vec3 pos, viewDir;
+    GetParamsFromUV(coord, size, pos, viewDir);
+
+    // Compute ray intersection with top of atmosphere
+    float tMax;
+    if (!RaySphereIntersect(pos, viewDir, Rt, tMax))
+    {
+        imageStore(transmittanceLUT, coord, vec4(1.0));
+        return;
+    }
+
+    const int steps = 128;
+    float dt = tMax / float(steps);
+
+    float opticalDepthR = 0.0;
+    float opticalDepthM = 0.0;
+
+    float t = 0.0;
+
+    for (int i = 0; i < steps; i++)
+    {
+        vec3 samplePos = pos + viewDir * (t + 0.5 * dt);
+        float h = length(samplePos);
+
+        float dR = exp(-(h - Rg) / HR) * dt;
+        float dM = exp(-(h - Rg) / HM) * dt;
+
+        opticalDepthR += dR;
+        opticalDepthM += dM;
+
+        t += dt;
+    }
+
+    // Beer-Lambert Law
+    vec3 tau = betaR * opticalDepthR + betaM * opticalDepthM;
+    vec3 T = exp(-tau);
+
+    imageStore(transmittanceLUT, coord, vec4(T, 1.0));
+}

@@ -354,10 +354,16 @@ void asset::ModelManager::loadFBX(std::string model_name, std::string filepath)
 		meshData.meshes.push_back(mesh);
 	}
 	modelData.vertices.resize(modelData.vertexSize);
+	modelData.pos.resize(modelData.vertexSize);
+	modelData.normal.resize(modelData.vertexSize);
+	modelData.uv.resize(modelData.vertexSize);
+	modelData.color.resize(modelData.vertexSize);
+	modelData.tangent.resize(modelData.vertexSize);
 	modelData.indices.resize(modelData.indiceSize);
 	
 	for (int i = 0; i < modelData.meshCount; i++) {
 		MeshData& meshData = modelData.meshdatas[i];
+		Mesh& mesh_offset = meshData.meshes[0];
 		uint32_t vertice_offset = meshData.meshes[0].vertexOffset;
 		uint32_t indices_offset = meshData.meshes[0].indexOffset;
 		const aiMesh* assimpMesh = scene->mMeshes[i];
@@ -370,6 +376,19 @@ void asset::ModelManager::loadFBX(std::string model_name, std::string filepath)
 			ver.color = assimpMesh->HasVertexColors(0) ? glm::vec4(assimpMesh->mColors[0]->r, assimpMesh->mColors[0]->g, assimpMesh->mColors[0]->b, assimpMesh->mColors[0]->a) : glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 			ver.tangent = assimpMesh->HasTangentsAndBitangents() ? glm::vec4(assimpMesh->mTangents[j].x, assimpMesh->mTangents[j].y, assimpMesh->mTangents[j].z, 0.0f) : glm::vec4(0.0f);
 			ver.normal = glm::normalize(ver.normal);
+			//
+			glm::vec3& pos = modelData.pos[j];
+			glm::vec3& normal = modelData.normal[j];
+			glm::vec2& uv = modelData.uv[j];
+			glm::vec4& color = modelData.color[j];
+			glm::vec4& tangent = modelData.tangent[j];
+
+			pos = ver.pos;
+			normal = ver.normal;
+			uv = ver.uv;
+			color = ver.color;
+			tangent = ver.tangent;
+			
 			meshData.aabbMin = utils::math::VecMin(ver.pos, meshData.aabbMin);
 			meshData.aabbMax = utils::math::VecMax(ver.pos, meshData.aabbMax);
 		}
@@ -380,10 +399,10 @@ void asset::ModelManager::loadFBX(std::string model_name, std::string filepath)
 			modelData.indices[indices_offset + baseIndex + 1] = face.mIndices[1] + vertice_offset;
 			modelData.indices[indices_offset + baseIndex + 2] = face.mIndices[2] + vertice_offset;
 		}
-		/*for (int i = 0; i < meshData.meshes[0].indiceCount; i +=3) {
-			Vertex& vert0 = modelData.vertices[vertice_offset + modelData.indices[indices_offset + i]];
-			Vertex& vert1 = modelData.vertices[vertice_offset + modelData.indices[indices_offset + i+1]];
-			Vertex& vert2 = modelData.vertices[vertice_offset + modelData.indices[indices_offset + i+2]];
+		for (int i = 0; i < meshData.meshes[0].indiceCount; i +=3) {
+			Vertex& vert0 = modelData.vertices[modelData.indices[indices_offset + i]];
+			Vertex& vert1 = modelData.vertices[modelData.indices[indices_offset + i+1]];
+			Vertex& vert2 = modelData.vertices[modelData.indices[indices_offset + i+2]];
 			glm::vec3 deltaPos1 = vert1.pos - vert0.pos;
 			glm::vec3 deltaPos2 = vert2.pos - vert0.pos;
 			glm::vec2 deltaUV1 = vert1.uv - vert0.uv;
@@ -394,7 +413,7 @@ void asset::ModelManager::loadFBX(std::string model_name, std::string filepath)
 			vert0.tangent = glm::vec4(tangent, 0.0f);
 			vert1.tangent = glm::vec4(tangent, 0.0f);
 			vert2.tangent = glm::vec4(tangent, 0.0f);
-		}*/
+		}
 		modelData.aabbMin = utils::math::VecMin(modelData.aabbMin, meshData.aabbMin);
 		modelData.aabbMax = utils::math::VecMax(modelData.aabbMax, meshData.aabbMax);
 

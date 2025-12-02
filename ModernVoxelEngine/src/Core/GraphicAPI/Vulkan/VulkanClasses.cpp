@@ -517,6 +517,7 @@ vulkan::Device::Device(
 		VK_API_VERSION_PATCH(apiVersion),							
 		VK_API_VERSION_VARIANT(apiVersion));
 	LLOGL("                 Driver info : %s %s\n", _physicalDeviceDriverProerties.driverName, _physicalDeviceDriverProerties.driverInfo);
+	CheckBindlessSupport();
 
 }
 
@@ -600,6 +601,24 @@ void vulkan::Device::CheckRequiredExtensions(VkPhysicalDevice physicalDevice, co
 	}
 }
 
+void vulkan::Device::CheckBindlessSupport()
+{
+	VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
+	indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+
+	VkPhysicalDeviceFeatures2 deviceFeatures2{};
+	deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+	deviceFeatures2.pNext = &indexingFeatures;
+
+	vkGetPhysicalDeviceFeatures2(_physicalDevice, &deviceFeatures2);
+
+	if (indexingFeatures.runtimeDescriptorArray &&
+		indexingFeatures.shaderSampledImageArrayNonUniformIndexing) {
+		bindless_support = true;
+	}
+
+}
+
 vulkan::SwapChain::SwapChain(const Device& device, BufferManager& buffermanager, VkPresentModeKHR presentationMode) : _physicalDevice(device.PhysicalDevice()), _bufferManager(buffermanager),_device(device)
 {
 	CreateSwapChain(presentationMode);
@@ -668,21 +687,6 @@ void vulkan::SwapChain::CreateSwapChain(VkPresentModeKHR presentationMode)
 	_imageViews.resize(_images.size());
 	for (size_t i = 0; i < _imageViews.size(); i++)
 	{
-		/*VkImageViewCreateInfo createInfo{ };
-		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-			createInfo.image = _images[i],
-			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D,
-			createInfo.format = surfaceFormat.format,
-			createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY,
-			createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY,
-			createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY,
-			createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		createInfo.subresourceRange.baseMipLevel = 0;
-		createInfo.subresourceRange.levelCount = 1;
-		createInfo.subresourceRange.baseArrayLayer = 0;
-		createInfo.subresourceRange.layerCount = 1;
-		Check(vkCreateImageView(_device.Handle(), &createInfo, nullptr, &_imageViews[i]), "Create image view");*/
 		_bufferManager.CreateImageView(_imageViews[i],_images[i],surfaceFormat.format,VK_IMAGE_ASPECT_COLOR_BIT,1);
 	}
 

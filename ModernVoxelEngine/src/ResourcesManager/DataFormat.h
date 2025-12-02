@@ -30,6 +30,11 @@ struct Mesh final {
     uint32_t indexOffset = 0;
 
     uint32_t vertexOffset = 0;
+    uint32_t pos_offset = 0;
+    uint32_t normal_offset = 0;
+    uint32_t uv_offset = 0;
+    uint32_t color_offset = 0;
+    uint32_t tangent = 0;
 
     // Vertex count (for all LODs)
     uint32_t vertexCount = 0;
@@ -226,7 +231,15 @@ struct ModelData {
     uint64_t timestamp;
     uint32_t vertexSize = 0;
     uint32_t indiceSize = 0;
-    
+
+    utils::vector<glm::vec3> pos;
+    utils::vector<glm::vec4> color;
+    utils::vector<glm::vec2> uv;
+    utils::vector<glm::vec3> normal;
+    utils::vector<glm::vec4> joint;
+    utils::vector<glm::vec4> weight;
+    utils::vector<glm::vec4> tangent;
+
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
     std::vector<MeshData> meshdatas;

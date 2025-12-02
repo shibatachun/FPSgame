@@ -1,0 +1,164 @@
+#version 460
+layout(local_size_x = 8, local_size_y = 8) in;
+
+// ============================================================================
+// OUTPUT: Multi-Scattering LUT (2D)
+// ============================================================================
+
+layout(binding = 0, rgba16f) writeonly uniform image2D multiScatteringLUT;
+
+// ============================================================================
+// INPUT: Transmittance LUT (LUT1) + Single Scattering LUT (LUT2)
+// ============================================================================
+
+layout(binding = 1) uniform sampler2D transmittanceLUT;
+layout(binding = 2) uniform sampler3D scatteringLUT;
+
+// ============================================================================
+// Atmosphere Parameters (保持和前面两个 shader 一致)
+// ============================================================================
+
+layout(std140, binding = 3) uniform AtmosphereUBO
+{
+    float Rg;               // ground radius
+    float Rt;               // top atmosphere radius
+    float HR;               // Rayleigh scale height
+    float HM;               // Mie scale height
+
+    vec3  betaR;            // Rayleigh coefficient
+    float _pad0;
+
+    vec3  betaM;            // Mie coefficient
+    float mieG;             // Mie anisotropy (not heavily used here, but保留一致)
+
+    vec3  sunDir;           // world-space sun direction (normalized)
+    float dummy0;
+};
+
+// ============================================================================
+// 通用工具
+// ============================================================================
+
+bool RaySphereIntersect(vec3 ro, vec3 rd, float radius, out float t)
+{
+    float b = dot(ro, rd);
+    float c = dot(ro, ro) - radius * radius;
+    float h = b * b - c;
+
+    if (h < 0.0)
+    {
+        t = 0.0;
+        return false;
+    }
+    t = -b + sqrt(h);
+    return (t >= 0.0);
+}
+
+// 利用 LUT1 计算任意点 pos、方向 dir 下的透射率 T
+vec3 ComputeTransmittance(vec3 pos, vec3 dir)
+{
+    float H  = length(pos);
+    float r  = clamp((H - Rg) / (Rt - Rg), 0.0, 1.0);
+    float mu = dot(pos, dir) / H; // cos between dir and "up"
+
+    float u = clamp((mu + 1.0) * 0.5, 0.0, 1.0);
+    float v = r;
+
+    return texture(transmittanceLUT, vec2(u, v)).rgb;
+}
+
+// 从 LUT2 中采样“单次散射” S1(pos, viewDir, sunDir)
+// 和第二个 LUT 的坐标映射保持一致：
+//   x: μ = cos(view zenith)
+//   y: r ∈ [Rg, Rt]
+//   z: ν = cos(angle between viewDir and sunDir)
+// 这里我们只关心 “沿着太阳方向的散射” viewDir = sunDir
+vec3 SampleSingleScattering(vec3 pos, vec3 viewDir, vec3 sunDir)
+{
+    float H = length(pos);
+    float rNorm = clamp((H - Rg) / (Rt - Rg), 0.0, 1.0);
+
+    vec3 up = pos / H;
+    float mu = clamp(dot(viewDir, up), -1.0, 1.0);    // view zenith
+    float nu = clamp(dot(viewDir, sunDir), -1.0, 1.0); // angle between view & sun
+
+    float x = (mu + 1.0) * 0.5;
+    float y = rNorm;
+    float z = (nu + 1.0) * 0.5;
+
+    return texture(scatteringLUT, vec3(x, y, z)).rgb;
+}
+
+// LUT UV → 实际高度、（预留）角度参数
+void GetParamsFromUV(ivec2 id, ivec2 size,
+                     out float height, out float dummyAngle)
+{
+    float u = (float(id.x) + 0.5) / float(size.x);
+    float v = (float(id.y) + 0.5) / float(size.y);
+
+    // 预留 u → 角度（目前我们没用，只是填满整个 LUT）
+    dummyAngle = mix(-1.0, 1.0, u);
+
+    // v → 高度
+    height = mix(Rg, Rt, v);
+}
+
+// ============================================================================
+// 多次散射近似积分：
+//   L_ms(h) ≈ ∫ T(view) * S1(x, sunDir) dx
+// 这里我们：
+//   - 从当前高度位置 pos 沿着太阳方向 sunDir 积分到大气顶
+//   - 使用 LUT2 采样单次散射 S1 (single scattering)
+//   - 使用 LUT1 估计 observer→sample 的透射率 T_view
+// ============================================================================
+
+void main()
+{
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 size  = imageSize(multiScatteringLUT);
+
+    if (coord.x >= size.x || coord.y >= size.y)
+        return;
+
+    float height, dummyAngle;
+    GetParamsFromUV(coord, size, height, dummyAngle);
+
+    float r = height;
+    vec3 pos = vec3(0.0, r, 0.0);   // observer position at given height
+
+    // 从当前点沿着太阳方向采样多次散射
+    float tMax;
+    if (!RaySphereIntersect(pos, sunDir, Rt, tMax))
+    {
+        imageStore(multiScatteringLUT, coord, vec4(0.0));
+        return;
+    }
+
+    const int steps = 40;
+    float dt = tMax / float(steps);
+
+    vec3 accum = vec3(0.0);
+    float t = 0.0;
+
+    for (int i = 0; i < steps; i++)
+    {
+        vec3 samplePos = pos + sunDir * (t + 0.5 * dt);
+
+        // observer -> sample 的透射率
+        vec3 viewTrans = ComputeTransmittance(pos, normalize(samplePos - pos));
+
+        // 单次散射（沿着太阳方向）作为“源项”
+        vec3 singleScat = SampleSingleScattering(samplePos, sunDir, sunDir);
+
+        // 积分：L_ms ≈ ∫ T_view * S1 dx
+        accum += singleScat * viewTrans * dt;
+
+        t += dt;
+    }
+
+    // 可以加一个 fudge factor 调整体感强度（0.3~1.0）
+    float multiScatterStrength = 0.5;
+    vec3 result = accum * multiScatterStrength;
+
+    imageStore(multiScatteringLUT, coord, vec4(result, 1.0));
+}

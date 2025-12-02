@@ -167,7 +167,7 @@ namespace vulkan {
 		void CommandBufferSubmit2(QueueFamily queue_, uint32_t submit_count, const VkSubmitInfo2KHR* submit_info_, VkFence fence);
 		bool isBindless = false;
 		bool synchronization2_extension_present = false;
-
+		bool bindless_support = false;
 	
 	private:
 		VULKAN_HANDLE(VkDevice, _device)
@@ -201,16 +201,9 @@ namespace vulkan {
 		
 	private:
 		void CheckRequiredExtensions(VkPhysicalDevice physicalDevice, const std::vector<const char*>& requiredExtensions);
+		void CheckBindlessSupport();
 	};
-	/////////////////////////////////////////////////CommandBuffer and Pool//////////////////////////////////////////////////////////////
-	struct CommandBuffer {
-		void Init(Device& device);
-		void Shutdown();
-		void Begin();
-		void BeginSecondary(VulkanRenderPass* currentRenderPass, VulkanFramebuffer* currentFramebuffer );
-		void End();
-		void EndCurrentRenderPass();
-	};
+	
 
 	class CommandPoolManager final {
 	public:
@@ -277,13 +270,6 @@ namespace vulkan {
 		void DestroyVkImageView(VkImageView imageview);
 		void DestroySampler(VkSampler sampler);
 
-		////test functions;
-		/*void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-		VkCommandBuffer beginSingleTimeCommands();
-		void endSingleTimeCommands(VkCommandBuffer commandBuffer);
-		void copyBuffer1(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-		void transitionImageLayout1(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
-		void copyBufferToImage1(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);*/
 	private:
 		const Device& device;
 		CommandPoolManager& commandPools;
